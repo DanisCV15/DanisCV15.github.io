@@ -1,41 +1,30 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Portfolio de Daniel Escolar: ciberseguridad junior, SOC, Blue Team y laboratorios documentados."><title>TwoMillion · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Laboratorio · Linux</p><h1>TwoMillion</h1><p class="lead">Análisis de API, inyección de comandos y escalada tras revisar el entorno.</p><p class="tag">API · Inyección · Kernel</p><div class="intro"><h2 style="margin-top:0">Resultado documentado</h2><p>El apunte termina confirmando acceso a root.</p></div><details open><summary>Apuntes de la resolución</summary><p class="notice">Texto adaptado desde mis apuntes de laboratorio. Las capturas no se incluyen en esta edición; algunos pasos remiten a ellas. El cierre se ha seleccionado por lo descrito en el texto, sin repetir técnicamente la explotación.</p><h2>TwoMillion</h2>
-<p>Escaneando con nmap podemos ver los puertos <code>22</code> y <code>80</code> abiertos. El puerto 80 nos lleva a una web antigua de hack the box.</p>
-<p>Para registrarnos podemos ver lo siguiente:</p>
-<p>Parece ser que tenemos que realizar un &quot;reto&quot; para poder acceder al código de invitación.</p>
-<p>Si seguimos el enlace nos lleva a este sitio:</p>
-<p>Vamos a inspeccionar el código fuente antes de nada:</p>
-<p>Podemos ver como esta web manda la petición de comparar la invitación a una api:</p>
-<p>También podemos ver como hay un recurso <code>js</code> el cual nos llama la atención <code>inviteapi.min.js</code>.</p>
-<p>Si le echamos un ojo a este código fuente podemos ver lo siguiente:</p>
-<p>Podemos ver que existe una función <code>makeInviteCode()</code> la cual, vamos a intentar llamarla en la propia página de la verificación del código:</p>
-<p>Tenemos una data &quot;encriptada&quot; en <code>ROT13</code>, si vamos a cualquier decodificador de rot13 podemos ver que nos devuelve una cadena en <code>base64</code>, si la decodificamos podemos ver la invitación.</p>
-<p>Nos vamos a la dirección <code>/register</code> la cual vimos en el código fuente:</p>
-<p>Introducimos todos los datos, el campo <code>invite code</code> esta en el modo <code>read only</code> desde el inspector lo borramos y ya nos permite ingresar el código.</p>
-<p>Una vez dentro , ya registrados podemos ver lo siguiente:</p>
-<h2>Api</h2>
-<p>Vemos que casi todo no tiene funcionalidad, menos un par de cosas, entre ellas: En el apartado <code>labs</code> en la pestaña <code>access</code> la cual podemos ver lo siguiente:</p>
-<p>Nos permite descargar una vpn y regenerarla. Haciendo hoovering podemos ver que lleva a una endpoint de una api, por lo que el siguiente paso lógico podría ser enumerar un poquito la api de la siguiente manera:</p>
-<p>Como podemos ver no estamos autorizados, por lo que probablemente tengamos que arrastrar la cookie de sesión:</p>
-<p>Podemos checkear si nuestro usuario es admin:</p>
-<p>Como es evidente el valor esta en <code>false</code>. Vamos a tratar de generar una api siendo admin:</p>
-<p>Como podemos ver no se nos permite, vamos a ver si podemos hacer una actualización de nuestro perfil por una mala configuración de la api:</p>
-<p>De momento podemos continuar, vamos a añadir el content type típico de <code>json</code> para ver si se nos permite:</p>
-<p>Proseguimos con la introducción de información:</p>
-<p>Ahora el momento de la verdad, podemos ver que nos falta el campo <code>is_admin</code>, si nos permite actualizar este parámetro , nos conseguiremos cambiar a administradores:</p>
-<p>Vamos a probar a cambiarlo a <code>1</code>, a ver que nos sale en la respuesta:</p>
-<p>Como podemos ver , en teoría, ahora somos admins. Vamos a corrobarlo con el endpoint de la api:</p>
-<p>Como podemos ver ya somos administradores.</p>
-<p>Tratando de generar una vpn podemos ver lo siguiente:</p>
-<p>Parece ser que al introducir nuestro <code>username</code> se ejecuta un comando por detrás para generar la vpn, por lo que podríamos checkear si existe algún tipo de inyección de comando:</p>
-<p>Y efectivamente tenemos un <code>command inyection</code>, ahora solo debemos introducir el típico one liner de bash y ganar acceso:</p>
-<h2>Privesc</h2>
-<p>Nada mas entrar como el usuario <code>ww-data</code> y hacer un ls en el escritorio podemos ver lo siguiente:</p>
-<p>Un archivo <code>Database.php</code>, si le echamos un ojo podemos ver lo siguiente:</p>
-<p>En este caso no podemos ver ni usuario ni contraseña, pero nos damos cuenta de que llama a las variables desde el entorno, vamos a buscar por archivos ocultos en este directorio:</p>
-<p>Vemos el fichero <code>.env</code>, vamos a ver que contiene:</p>
-<p>Tenemos usuario y contraseña par una base de datos, antes de intentar entrar a al base de datos vamos a tratar de validar que no exista reutilización de contraseñas:</p>
-<p>Nos hemos conectado por ssh. En el mensaje de inicio podemos ver que tenemos un <code>mail</code>, vamos a echarle un ojo:</p>
-<p>Nos avisan de que actualizemos el kernel, porque existen posibles <code>CVE´s</code> los cuales pondrian en peligro el root del sistema, vamos a echar un ojo al CVE que nos propone en el mail:</p>
-<p>Encontramos un script en github, nos lo clonamos a nuestra máquina, para no transferir todos los archivos de uno en uno, lo que vamos a hacer es comprimirlo.</p>
-<p>En el caso de que la máquina objetivo no tuviese instalado <code>make</code> lo suyo es compilarlo en nuestra máquina y luego transferirlo.</p>
-<p>Primero lo comprimimos, ahora nos compartimos un servidor en python para transferirlo. Una vez transferido y descomprimido hacemos los pasos que nos dice en en github y ya somos root:</p></details><div class="actions"><a class="button" href="index.html#laboratorios">← Volver al catálogo</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo · Laboratorios realizados en entornos de práctica.</div></footer></body></html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="TwoMillion — Laboratorios de ciberseguridad de Daniel Escolar."><title>TwoMillion · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Linux · Laboratorio</p><h1>TwoMillion</h1><p class="lead">Análisis de API, inyección de comandos y escalada tras revisar el entorno.</p><p class="tag">API · Inyección · Kernel</p><h2>Consiguiendo la invitación</h2>
+<p>Nmap nos muestra SSH y HTTP. La web recrea una versión antigua de Hack The Box y pide un código de invitación para registrarnos. Revisamos el código fuente y encontramos <code>inviteapi.min.js</code>. Dentro aparece la función <code>makeInviteCode()</code>. La llamamos desde la consola y seguimos las pistas codificadas en ROT13 y Base64 hasta obtener el código.</p>
+<figure><a href="shot-twomillion-04.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Consiguiendo la invitación"><img src="shot-twomillion-04.webp" alt="TwoMillion: consiguiendo la invitación, captura 4" width="1744" height="66" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-twomillion-05.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Consiguiendo la invitación"><img src="shot-twomillion-05.webp" alt="TwoMillion: consiguiendo la invitación, captura 5" width="244" height="191" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-twomillion-06.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Consiguiendo la invitación"><img src="shot-twomillion-06.webp" alt="TwoMillion: consiguiendo la invitación, captura 6" width="1005" height="133" loading="lazy" decoding="async"></a></figure>
+<p>Vamos a <code>/register</code>. El campo de invitación está marcado como solo lectura, así que quitamos ese atributo en el inspector y completamos el registro.</p>
+<h2>Enumeración de la API</h2>
+<p>Una vez dentro vemos que la descarga y la regeneración de la VPN utilizan una API. Empezamos a consultar sus rutas y comprobamos que debemos enviar la cookie de nuestra sesión.</p>
+<figure><a href="shot-twomillion-11.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Enumeración de la API"><img src="shot-twomillion-11.webp" alt="TwoMillion: enumeración de la api, captura 11" width="1013" height="678" loading="lazy" decoding="async"></a></figure>
+<p>Nuestro usuario no es administrador y los endpoints reservados nos rechazan. Sin embargo, una ruta de actualización responde indicando qué datos le faltan. Vamos completando la petición con JSON hasta que pide <code>is_admin</code>. Probamos a enviar ese valor como <code>1</code> y después consultamos de nuevo el estado de la cuenta. La API confirma que ahora somos administradores.</p>
+<figure><a href="shot-twomillion-17.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Enumeración de la API"><img src="shot-twomillion-17.webp" alt="TwoMillion: enumeración de la api, captura 17" width="2138" height="111" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-twomillion-18.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Enumeración de la API"><img src="shot-twomillion-18.webp" alt="TwoMillion: enumeración de la api, captura 18" width="2075" height="132" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-twomillion-19.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Enumeración de la API"><img src="shot-twomillion-19.webp" alt="TwoMillion: enumeración de la api, captura 19" width="1139" height="83" loading="lazy" decoding="async"></a></figure>
+<h2>Inyección en la generación de VPN</h2>
+<p>Con los nuevos permisos volvemos a la generación de la VPN. El nombre de usuario parece acabar dentro de un comando del sistema, así que lo probamos con una inyección sencilla.</p>
+<figure><a href="shot-twomillion-21.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Inyección en la generación de VPN"><img src="shot-twomillion-21.webp" alt="TwoMillion: inyección en la generación de vpn, captura 21" width="1972" height="55" loading="lazy" decoding="async"></a></figure>
+<p>La ejecución funciona. Preparamos la reverse shell, abrimos el listener y conseguimos entrar en la máquina.</p>
+<h2>Credenciales en .env</h2>
+<p>Dentro revisamos el proyecto. <code>Database.php</code> no contiene la contraseña directamente, sino que la obtiene de variables de entorno. Buscamos archivos ocultos y encontramos <code>.env</code> con las credenciales de la base de datos.</p>
+<figure><a href="shot-twomillion-24.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Credenciales en .env"><img src="shot-twomillion-24.webp" alt="TwoMillion: credenciales en .env, captura 24" width="951" height="1232" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-twomillion-25.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Credenciales en .env"><img src="shot-twomillion-25.webp" alt="TwoMillion: credenciales en .env, captura 25" width="551" height="344" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-twomillion-26.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Credenciales en .env"><img src="shot-twomillion-26.webp" alt="TwoMillion: credenciales en .env, captura 26" width="374" height="147" loading="lazy" decoding="async"></a></figure>
+<p>Antes de seguir con MySQL pruebo si la contraseña está reutilizada para SSH. Funciona y podemos entrar con el usuario del sistema.</p>
+<h2>La pista del correo</h2>
+<p>El mensaje de inicio avisa de correo pendiente. Al leerlo encontramos una advertencia sobre la necesidad de actualizar el kernel y una referencia a una vulnerabilidad que podría comprometer root.</p>
+<figure><a href="shot-twomillion-28.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La pista del correo"><img src="shot-twomillion-28.webp" alt="TwoMillion: la pista del correo, captura 28" width="2478" height="402" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-twomillion-29.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La pista del correo"><img src="shot-twomillion-29.webp" alt="TwoMillion: la pista del correo, captura 29" width="772" height="165" loading="lazy" decoding="async"></a></figure>
+<p>Buscamos la prueba de concepto, la preparamos en nuestro equipo y la transferimos comprimida al destino. Después de descomprimirla seguimos los pasos necesarios para ejecutarla.</p>
+<figure><a href="shot-twomillion-31.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: La pista del correo"><img src="shot-twomillion-31.webp" alt="TwoMillion: la pista del correo, captura 31" width="529" height="76" loading="lazy" decoding="async"></a></figure>
+<p>La escalada funciona y obtenemos acceso como root.</p><div class="actions"><a class="button" href="index.html#laboratorios">← Volver a los laboratorios</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo</div></footer></body></html>

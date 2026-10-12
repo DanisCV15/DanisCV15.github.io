@@ -1,59 +1,24 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Portfolio de Daniel Escolar: ciberseguridad junior, SOC, Blue Team y laboratorios documentados."><title>Presidential Hack4u · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Laboratorio · Linux</p><h1>Presidential Hack4u</h1><p class="lead">Enumeración web, acceso inicial y abuso de una capability de lectura.</p><p class="tag">Web · Capabilities · SSH</p><div class="intro"><h2 style="margin-top:0">Resultado documentado</h2><p>El cierre confirma acceso SSH como root.</p></div><details open><summary>Apuntes de la resolución</summary><p class="notice">Texto adaptado desde mis apuntes de laboratorio. Las capturas no se incluyen en esta edición; algunos pasos remiten a ellas. El cierre se ha seleccionado por lo descrito en el texto, sin repetir técnicamente la explotación.</p><h2>Presidential Hack4u</h2>
-<h2>Encontrando la ip en nuestra red.</h2>
-<p>Con el comando <code>arp-scan -I ens33 --localnet --ignoredups</code> podemos ver que la ip de la máquina que vamos a vulnerar es <code>192.168.1.52</code>.</p>
-<h2>Escaneo con nmap.</h2>
-<p>Con el primer comando de nmap para explorar que es a lo que nos enfrentamos: <code>nmap -p- --open --min-rate 5000 -n -Pn -vvv -192.168.1.52 -oG allports</code>, vemos que los puertos que nos aparecen por el momento son:</p>
-<pre><code>80 tcp
-2082 tcp</code></pre>
-<p>Lanzando nmap con una serie de scripts básicos de reconocimiento <code>nmap -p80,2082 -sCV 192.168.1.52 -oN targeted</code>, vemos lo siguiente:</p>
-<p>Ahora vamos a dejar corriendo el comando con nmap para ir descubriendo un poco el servicio http.</p>
-<p><code>nmap --script http-enum -p80 192.168.1.52 -oN webscan</code></p>
-<p>Esto solo nos reporta un directorio <code>/icons/</code>.</p>
-<p>Con el comando <code>whatweb</code> vemos que nos enumera un mail con la extensión <code>.local</code> por lo que podemos contemplarla en el <code>/etc/hosts</code> por si fuera un virtual hosting.</p>
-<p>Le echamos un ojo para ver si nos lo encuentra el navegador:</p>
-<p>Y efectivamente nos lo encuentra. Lo primero que haremos con <code>gobuster</code> es buscar en la ip por si hubiese más directorios.</p>
-<p>Vemos la dirección <code>/cgi-bin</code> por lo que es factible testear un ataque <code>shellshock</code>, pero en este caso no es este el vector de ataque.</p>
-<h2>Enumeración de vhost con GoBuster.</h2>
-<p>Como vemos que con la ip no nos encuentra nada más, podemos probar a hacer descubrimiento de virtual host.</p>
-<p>Vemos que nos encuentra muchas direcciones con el estatus <code>400</code> las cuales no nos sirven, si las ocultamos podemos ver que no nos reporta nada.</p>
-<p>Probamos también con la lista de directorios, por si acaso, ya que existen tantos nombres posibles que nos podría llegar a interesar enumerarlos.</p>
-<p>Como podemos ver, al buscar con el diccionario de directorios medium, nos encuentra una ruta:</p>
-<p><code>datasafe.votenow.local</code> </p>
-<p>Esto lo incluimos en el <code>/etc/hosts</code> para poder acceder a ello y vemos lo siguiente:</p>
-<p>Vamos a probar distintas credenciales, por si hubiese algo mal configurado:</p>
-<p>Hemos probado <code>username: root</code> y la contraseña vacía, como default credentials, pero no nos deja.</p>
-<p>Llegados a este punto, podemos observar que quizás nos hayamos dejado algo en el tintero.</p>
-<p>Volvemos a enumerar la ip desde la raíz pero ahora buscando por extensiones, en este caso serán: <code>php,txt,html,php.bak,bak</code> por ejemplo.</p>
-<p>Al realizar esta búsqueda con gobuster vemos lo siguiente:</p>
-<p>Lo que me llama la atención de primeras es el archivo <code>config.php</code> y <code>config.php.bak</code> el cual es una backup del primero.</p>
-<p>Le echamos un vistazo primero al primero:</p>
-<p>No podemos ver nada incluso en código fuente, por lo que asumimos que se interpreta el código php.</p>
-<p>Echemos un vistazo al <code>.bak</code>:</p>
-<p>En el código fuente podemos ver un usuario y una contraseña. Vamos a probarlo en <code>phpmyadmin</code>.</p>
-<h2>Accediendo a phpMyAdmin</h2>
-<p>Como podemos ver las credenciales eran correctas. Vamos a echarle un ojo a la página para ver que podemos encontrar.</p>
-<p>Podemos ver la versión de <code>phpMyAdmin</code>:</p>
-<p>Vamos a usar <code>searchsploit</code> para ver si encuentra algún tipo de vulnerabilidad asociada a esta versión.</p>
-<p>Podemos ver que se puede acontecer un <code>LFI</code> junto con un <code>RCE</code>, vamos a echarle un ojo a los scripts para ver un poco como funciona estos exploits.</p>
-<p>Analizando un poco el script en <code>python</code> podemos ver que lo que trata de hacer primero es utilizar un <code>LFI</code> con la <code>session id</code> para apuntar a una ruta.</p>
-<p>Después de apuntar lo que hace manda a la ruta <code>/import.php</code> una query de sql inyectando código php.</p>
-<p>Lo primero que podemos hacer es probar en la propia pestaña de <code>SQL</code> a ver si podemos llevar a cabo este <code>RCE</code>.</p>
-<p>Inyectando un <code>SELECT &quot;hola&quot;</code> podemos ver que en el <code>LFI</code> aparece lo siguiente:</p>
-<p>Por lo que al ser un <code>index.php</code> puede que nos interprete la query si le inyectamos código php.</p>
-<p>La introducimos y vemos si nos devuelve una reverse shell. Nos ponemos en escucha por el puerto 443 y vemos.</p>
-<p>Previamente tendríamos que haber echado un vistazo a la base de datos ya que nos encontramos lo siguiente:</p>
-<p>Un <code>username</code> con la <code>password</code> hasheada. Podemos intentar romperla con john.</p>
-<h2>Dentro de la máquina</h2>
-<p>Mientras esperamos que <code>john the ripper</code> descifre la contraseña, vamos realizando un tratamiento de la tty.</p>
-<p>[CREDENCIAL OMITIDA EN LA COPIA INTEGRADA]</p>
-<p>Antes que nada, lo primero que hacemos es ver los archivos <code>.conf</code> para ver si podemos encontrar algún tipo de contraseña hardcodeada.</p>
-<p>Como no encontramos nada decidimos convertirnos a admin ya que tenemos su contraseña:</p>
-<p>Una vez después de escalar privilegios lo primero que hacemos es ver si pertenecemos a algún grupo especial con el comando <code>id</code>, no vemos nada. </p>
-<p>Después buscamos permisos <code>suid</code> especiales con el comando <code>find / -perm -4000 2&gt;/dev/null</code> y no encontramos nada importante.</p>
-<p>También miramos si el usuario <code>admin</code> tiene capacidad de uso de <code>sudo</code> con el comando <code>sudo -l</code> pero vemos que no tiene nada.</p>
-<p>El siguiente paso es buscar <code>capabilities</code>:</p>
-<p>De hecho vemos varias capabilities interesantes, pero la única que funcionará es <code>cap_dac_read_search+ep</code> que nos permite listar cualquier fichero del sistema.</p>
-<p>Con esta capabilities realizamos el siguiente comando <code>tarS -cvf id_rsa.tar /root/.ssh/id_rsa</code> para crear un comprimido de la clave privada de root. Luego lo descomprimimos para ver si lo tenemos y efectivamente ha funcionado.</p>
-<p>Gracias a esto vamos a probar si conectándonos por el puerto <code>2082</code> como root nos lo permite.</p>
-<p>Con el siguiente comando lo llevaremos a cabo: <code> ssh -i id_rsa root@localhost -p 2082</code></p>
-<p>Ya somos root:</p></details><div class="actions"><a class="button" href="index.html#laboratorios">← Volver al catálogo</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo · Laboratorios realizados en entornos de práctica.</div></footer></body></html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Presidential · Hack4u — Laboratorios de ciberseguridad de Daniel Escolar."><title>Presidential · Hack4u · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Linux · Laboratorio</p><h1>Presidential · Hack4u</h1><p class="lead">Enumeración web, acceso inicial y abuso de una capability de lectura.</p><p class="tag">Web · Capabilities · SSH</p><h2>Reconocimiento y virtual hosts</h2>
+<p>Localizamos la máquina con <code>arp-scan</code> y hacemos el escaneo de puertos. Encontramos HTTP en el <code>80</code> y otro servicio en el <code>2082</code>.</p>
+<figure><a href="shot-presidential-hack4u-01.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Reconocimiento y virtual hosts"><img src="shot-presidential-hack4u-01.webp" alt="Presidential Hack4u: reconocimiento y virtual hosts, captura 1" width="1306" height="508" loading="lazy" decoding="async"></a></figure>
+<p>WhatWeb nos da una pista sobre un dominio <code>.local</code>. Lo añadimos a <code>/etc/hosts</code> y seguimos enumerando. Aparece <code>/cgi-bin</code>, pero las pruebas por esa vía no nos permiten avanzar. Probamos también virtual hosts. Tras cambiar de diccionario encontramos <code>datasafe.votenow.local</code>, que nos lleva a phpMyAdmin. Las credenciales habituales no funcionan.</p>
+<figure><a href="shot-presidential-hack4u-05.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Reconocimiento y virtual hosts"><img src="shot-presidential-hack4u-05.webp" alt="Presidential Hack4u: reconocimiento y virtual hosts, captura 5" width="1852" height="602" loading="lazy" decoding="async"></a></figure>
+<h2>Un archivo de copia accesible</h2>
+<p>Volvemos a enumerar la web, esta vez incluyendo extensiones como <code>php</code>, <code>txt</code> y <code>bak</code>. Aparecen <code>config.php</code> y <code>config.php.bak</code>. El primero no muestra contenido porque el servidor interpreta el PHP. La copia, en cambio, nos deja leer el código y encontrar unas credenciales.</p>
+<figure><a href="shot-presidential-hack4u-07.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Un archivo de copia accesible"><img src="shot-presidential-hack4u-07.webp" alt="Presidential Hack4u: un archivo de copia accesible, captura 7" width="797" height="179" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-presidential-hack4u-08.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Un archivo de copia accesible"><img src="shot-presidential-hack4u-08.webp" alt="Presidential Hack4u: un archivo de copia accesible, captura 8" width="638" height="193" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-presidential-hack4u-09.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: Un archivo de copia accesible"><img src="shot-presidential-hack4u-09.webp" alt="Presidential Hack4u: un archivo de copia accesible, captura 9" width="724" height="260" loading="lazy" decoding="async"></a></figure>
+<h2>De phpMyAdmin a una shell</h2>
+<p>Las credenciales funcionan en phpMyAdmin. Revisamos la versión y encontramos una combinación de inclusión de archivos y ejecución de PHP. Antes de lanzar la reverse shell hago una prueba sencilla: envío un <code>SELECT</code> con una cadena y compruebo que puedo verla a través de la inclusión del archivo de sesión. Después sustituyo la cadena por código PHP.</p>
+<figure><a href="shot-presidential-hack4u-12.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: De phpMyAdmin a una shell"><img src="shot-presidential-hack4u-12.webp" alt="Presidential Hack4u: de phpmyadmin a una shell, captura 12" width="246" height="89" loading="lazy" decoding="async"></a></figure>
+<figure><a href="shot-presidential-hack4u-13.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: De phpMyAdmin a una shell"><img src="shot-presidential-hack4u-13.webp" alt="Presidential Hack4u: de phpmyadmin a una shell, captura 13" width="488" height="68" loading="lazy" decoding="async"></a></figure>
+<p>Recibimos la shell. También revisamos la base de datos y encontramos un hash de contraseña. Lo pasamos a John mientras tratamos la terminal y seguimos enumerando.</p>
+<h2>El usuario admin y las capabilities</h2>
+<p>Cuando recuperamos la contraseña podemos cambiar al usuario <code>admin</code>. Revisamos sus grupos, permisos SUID y sudo, pero por ahí no aparece nada útil.</p>
+<figure><a href="shot-presidential-hack4u-15.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: El usuario admin y las capabilities"><img src="shot-presidential-hack4u-15.webp" alt="Presidential Hack4u: el usuario admin y las capabilities, captura 15" width="584" height="155" loading="lazy" decoding="async"></a></figure>
+<p>Seguimos con las capabilities y encontramos <code>cap_dac_read_search</code> en un binario de <code>tar</code>. Ese permiso nos permite leer archivos saltándonos las restricciones habituales.</p>
+<figure><a href="shot-presidential-hack4u-16.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: El usuario admin y las capabilities"><img src="shot-presidential-hack4u-16.webp" alt="Presidential Hack4u: el usuario admin y las capabilities, captura 16" width="479" height="151" loading="lazy" decoding="async"></a></figure>
+<p>Lo utilizamos para crear un archivo comprimido con la clave privada de root, lo extraemos y restringimos los permisos de la clave. Después probamos la conexión SSH local por el puerto <code>2082</code>:</p>
+<pre><code>ssh -i id_rsa root@localhost -p 2082</code></pre>
+<figure><a href="shot-presidential-hack4u-17.webp" target="_blank" rel="noopener" aria-label="Ampliar captura: El usuario admin y las capabilities"><img src="shot-presidential-hack4u-17.webp" alt="Presidential Hack4u: el usuario admin y las capabilities, captura 17" width="517" height="212" loading="lazy" decoding="async"></a></figure>
+<p>El acceso funciona. Ya somos root.</p><div class="actions"><a class="button" href="index.html#laboratorios">← Volver a los laboratorios</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo</div></footer></body></html>
