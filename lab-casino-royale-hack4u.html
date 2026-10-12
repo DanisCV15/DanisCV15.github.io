@@ -1,0 +1,120 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Portfolio de Daniel Escolar: ciberseguridad junior, SOC, Blue Team y laboratorios documentados."><title>Casino Royale Hack4u · Daniel Escolar</title><link rel="stylesheet" href="styles.css"></head><body><a class="skip" href="#contenido">Saltar al contenido</a><header class="nav"><div class="wrap"><a class="brand" href="index.html">DE<b>.</b></a><nav aria-label="Navegación principal"><a href="index.html#perfil">Perfil</a><a href="index.html#laboratorios">Laboratorios</a><a href="index.html#contacto">Contacto ↗</a></nav></div></header><main id="contenido" class="article"><a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a><p class="eyebrow">Laboratorio · Linux</p><h1>Casino Royale Hack4u</h1><p class="lead">Recorrido de enumeración, acceso web y escalada mediante un ejecutable privilegiado.</p><p class="tag">Web · SUID · Rutas relativas</p><div class="intro"><h2 style="margin-top:0">Resultado documentado</h2><p>El apunte describe una Bash privilegiada, acceso a /root/flag y declara la máquina lista.</p></div><details open><summary>Apuntes de la resolución</summary><p class="notice">Texto adaptado desde mis apuntes de laboratorio. Las capturas no se incluyen en esta edición; algunos pasos remiten a ellas. El cierre se ha seleccionado por lo descrito en el texto, sin repetir técnicamente la explotación.</p><h2>Casino Royale Hack4u</h2>
+<h2>Descubrimiento de la IP</h2>
+<p>Descubrimos la ip de la máquina objetivo mediante el siguiente comando:</p>
+<p><code>arp-scan -I ens33 -localnet -ignoredups</code></p>
+<p>Con ello podemos ver la ip de la máquina objetivo.</p>
+<p>Lo primero es hacerle ping para verificar que tenemos conectividad con la máquina:</p>
+<p>Como podemos ver tenemos conectividad.</p>
+<h2>Escaneos con NMAP</h2>
+<p>Lo primero hacemos un reconocimiento básico con NMAP:</p>
+<p>Hemos utilizado el comando <code>nmap -p- --open -sS --min-rate 5000 -vvv -n -Pn 192.168.1.34 -oG allports</code></p>
+<p>Después utilizaremos el siguiente comando para lanzar unos scripts básicos de reconocimiento para ampliar la información:  <code>nmap -sCV -p21,25,80.8081 192.168.1.34 -oN targeted</code></p>
+<p>Viendo la información que nos proporciona podemos asumir lo siguiente:</p>
+<p>- El puerto 21 FTP no permite la conexión anónima - El puerto 80 tiene expuesto el archivo robots.txt deshabilitando dos entradas: /cards y /kboard. - El puerto 8081, que no necesariamente tiene por qué ser http, en este caso es http.</p>
+<p>Antes de proseguir echemos un vistazo a todo esto.</p>
+<p>Página web por el puerto 80, aparentemente no contiene nada, ni en el código fuente.</p>
+<p>Página web por el puerto 8081, contiene un botón <code>run data collect</code>, si le pulsamos nos lleva al siguiente recurso:</p>
+<p>Volvemos para la anterior, analizamos le código fuente pero no vemos nada, solo aparece el recurso <code>collect.php</code>.</p>
+<p>Analizando la dirección <code>/cards</code>:</p>
+<p>Analizando la dirección <code>/board</code>:</p>
+<p>&lt;hr&gt;</p>
+<p>Antes de analizar con herramientas de fuzzeo más potentes, utilizaremos NMAP para analizar posibles directorios en la web.</p>
+<p>Con el siguiente comando analizaremos posibles direcciones: <code>nmap --script http-enum -p80,8081 192.168.1.34 -oN targeted</code></p>
+<p>Nos muestra lo siguiente:</p>
+<p>Vamos a acudir a los siguientes recursos para checkearlos.</p>
+<p>Visitando <code>phpmyadmin</code>:</p>
+<p>Probamos combinaciones posibles por si estuviese poco securizado.</p>
+<p>Probando varias variantes tales como:</p>
+<p>- root root - admin admin - admin passwd - root vacio</p>
+<p>Sin credenciales no podremos acceder.</p>
+<p>Vamos al siguiente recurso <code>/includes</code> y vemos una página en blanco:</p>
+<p>Nada aparentemente en el código fuente.</p>
+<p>Nos dirigimos al siguiente recurso <code>/install</code> y vemos lo siguiente:</p>
+<p>Como podemos ver nos aparece la versión <code>v0.13</code>, si buscamos en searchsploit para más información vemos lo siguiente:</p>
+<p>Veamos el recurso de <code>PokerMax</code> para saber de que trata esta vulnerabilidad:</p>
+<p>Ejecutamos el siguiente comando: <code>searchsploit -x php/webapps/6766.txt</code> y vemos lo siguiente:</p>
+<p>Siguiendo las instrucciones de este exploit podemos ver que nos permite acceder a una de las direcciones que nos comenta el script.</p>
+<p>El siguiente paso sería , en consola en el modo inspeccionar introducir lo siguiente:</p>
+<p><code>javascript:document.cookie = &quot;ValidUserAdmin=admin&quot;;</code> </p>
+<p>Una vez hecho esto, si nos dirigimos al recurso <code>/pokeradmin/configure.php</code> como nos indica el exploit vemos lo siguiente:</p>
+<p>Efectivamente, nos setteó la cookie como un admin válido.</p>
+<p>Echando un ojo por la web, podemos ver en <code>manage players</code> que el único usuario con algo de información dentro de su perfil es valenka.</p>
+<p>En el perfil de valenka vemos lo siguiente:</p>
+<p>Viendo esto, podemos incluir el DNS  en el archivo <code>/etc/hosts</code> para poder ver la siguiente página web en condiciones.</p>
+<p>También podemos ver que su <code>email</code> es valenka a secas, por lo que nos da pistas para el uso del smtp en el puerto 25.</p>
+<p>Accediendo a la dirección que nos pone en el perfil de valenka vemos lo siguiente:</p>
+<p>Podemos ver <code>Snow fox cms</code> por lo que podríamos checkearlo en searchsploit para ver si es vulnerable el servicio.</p>
+<p>Searchsploit nos muestra lo siguiente:</p>
+<p>Efectivamente esto nos confirma nuestras sospechas, podemos conseguir un <code>CSRF</code> mandándole un correo a valenka. </p>
+<p>Por lo que vamos a conectarnos con <code>telnet</code> al servicio de correo.</p>
+<p>Habiéndonos conectado por <code>telnet</code> por el puerto 25, mandaremos el mail de la siguiente manera:</p>
+<pre><code>mail from: dani
+ok
+rcpt to: valenka
+ok
+data
+ok
+subject: obanno
+
+http://miIP:80/pwnd.html
+
+.
+ok
+quit</code></pre>
+<p>Los ok son las confirmaciones del servicio, los uso aquí para saber cuando escribir el resto del mail.</p>
+<p>Antes de mandar el mail por completo nos abrimos un servidor http con python por le puerto 80 donde tengamos el html malicioso que queremos que se ejecute cuando <code>valenka</code> abra el mail.</p>
+<p>Mandamos el mail y cuando veamos la confirmación de nuestro servidor http de que valenka se ha conectado a nuestro servidor, podemos ir a <code>snow fox cms</code> y intentar autenticarnos.</p>
+<p>Efectivamente, la vulnerabilidad nos ha permitido crear un usuario para que podamos entrar:</p>
+<p>Cacharreando por la web, hay un pestaña de <code>admin</code> y de <code>manage users</code>. Husmeando por los usuarios podemos ver lo siguiente:</p>
+<p>Ahí podemos ver como valenka, efectivamente, nos ha creado nuestro usuario administrador.</p>
+<p>Si revisamos el perfil de cada uno podemos ver descripciones, pero si vamos al usuario <code>le</code> podemos ver lo siguiente:</p>
+<p>Podemos ver que hace referencia a otra ruta, vamos a ver a donde nos lleva.</p>
+<p>Podemos ver lo siguiente si vamos a esa dirección:</p>
+<p>No podemos ver nada, pero si accedemos al código fuente podremos ver lo siguiente:</p>
+<p>Básicamente nos está comentando en el código fuente que que la página acepta comandos xml y esto nos hace pensar en un posible <code>xml entity inyection</code>.</p>
+<p>Abrimos el Burpsuite para comprobar esto.</p>
+<p>Tal cual nos chiva el código fuente, existe una etiqueta <code>creds</code> la cual almacena otras dos etiquetas; <code>users y pass</code> estas se van a referir dentro de <code>creds</code> como <code>customer</code> y <code>password</code>. Después hace un <code>echo</code> de <code>Welcome $user</code>.</p>
+<p>Vamos a checkear con lo siguiente:</p>
+<p>Efectivamente, el XXE es viable, buscando en google por: <code>xxe portswiger</code> obtendremos una estructura simple en <code>xml</code> para acontecer este ataque.</p>
+<p>La pegamos en Burpsuite y debería quedar algo tal que así:</p>
+<p>Si le damos a seguir la petición podemos ver el <code>/etc/passwd</code> en la página:</p>
+<p>Echándole un ojo al <code>/etc/passwd</code> podemos ver un usuario que se llama <code>ftpUserULTRA</code>, lo cual esto nos da pistas de un posible usuario para conexión FTP.</p>
+<p>Utilizando <code>hydra</code> para el ataque de fuerza bruta, usamos el siguiente comando:</p>
+<p><code>hydra -l ftpUserULTRA -P /usr/share/wordlists/rockyou.txt</code></p>
+<p>Por nuestro bien, sabemos que la contraseña se encuentra sobre la línea 400 mil, por lo que en esta clase se nos dice cuál es la contraseña.</p>
+<p>Normalmente la habría encontrado Hydra después de varias horas de búsqueda.</p>
+<p>[CREDENCIAL OMITIDA EN LA COPIA INTEGRADA]</p>
+<p>Vamos a tratar de conectarnos:</p>
+<p>[CREDENCIAL OMITIDA EN LA COPIA INTEGRADA]</p>
+<h2>RCE</h2>
+<p>Ahora lo que podemos hacer es subir un archivo que nos permita ejecutar comandos de manera remota. Vamos a crear el típico archvo php para que nos lo interprete.</p>
+<p>Subimos un archivo nombrado como <code>cmd.php3</code> ya que la extensión php no se permite subirla.</p>
+<p>En la propia web, podemos ver todos los recursos que están en <code>/ultra-access-view</code>:</p>
+<p>Como podemos ver tenemos nuestro archivito subido. Si pinchamos en el vemos lo siguiente:</p>
+<p>Está en blanco, si vemos el código fuente vemos lo siguiente:</p>
+<p>Vacío también, por lo que el código se está interpretando. Si le damos un par de vueltas , vemos que dentro de la conexión FTP están los permisos de nuestro archivo en <code>600</code> por lo que para ver todo desde navegador tendremos que permitir que otros puedan ver el archivo y ejecutarlo, por lo que le pondremos unos permisos <code>777</code>.</p>
+<p>Simplemente con ese cambio, si acudimos a la web y ponemos el comando <code>ìd</code> por ejemplo, ya podemos verlo:</p>
+<p>Ahora simplemente nos tenemos que mandar una bash a nuestro equipo:</p>
+<p>Con el one liner de siempre, hemos entablado una reverse shell en nuestro equipo.</p>
+<p>Ahora hay que hacer el tratamiento de la shell y ya estamos dentro.</p>
+<h2>Escalada de privilegios</h2>
+<p>Lo primero que haremos al tener acceso a la máquina, es buscar archivos .conf que se hayan utilizado para montar todo el sistema web.</p>
+<p>Normalmente hay información sensible en estos archivos.</p>
+<p>Usamos el comando <code>find -name \*conf\* -exec cat {} /; | less -S</code> </p>
+<p>Con este comando buscamos en el directorio base de todo el tinglado de las páginas web para buscar por archivos que contengan la palabra <code>conf</code> y luego nos ejecuta un <code>cat</code> a todo para leer lo que hay dentro y buscar algo de información útil.</p>
+<p>Al hacer esto podemos ver que está el usuario <code>valenka</code> y su contraseña, la cual principalmente es par la base de datos, pero si la probamos al hacer un cambio de usuario nos lo permite.</p>
+<p>Al estar como usuario valenka, nos vamos a su <code>home</code> para ver si hay algo interesante.</p>
+<p>Echamos un vistazo a su <code>.bash_history</code> y podemos ver que hay algo de Tareas cron.</p>
+<p>Echamos un vistazo con <code>crontab -l</code> para ver si hay alguna tarea cron de valenka ejecutándose y no hay nada.</p>
+<p>Miramos también <code>systemctl list-timers</code> para ver si hay algo ejecutándose a intervalos regulares de tiempo de lo que nos podamos aprovechar. En principio nada, todo tiene un tiempo de ejecución super alto.</p>
+<p>Ahora el siguiente paso es buscar archivos con privilegios <code>SUID O SGID</code> con el comando <code>find / -perm -4000 2&gt;/dev/null</code> y encontramos algo interesante:</p>
+<p>Le echamos un ojo a ver que permisos tiene:</p>
+<p>Lo ejecuta el usuario <code>root</code> y tiene permiso <code>SUID Y SGID</code>. Si lo ejecutamos nos muestra lo siguiente:</p>
+<p>Está tratando de buscar un archivo <code>run.sh</code>.</p>
+<p>Si hacemos un <code>locate run.sh</code> podemos encontrar en la misma dirección que este ejecutable pero pertenece al usuario <code>le</code>. </p>
+<p>Si hacemos <code>strings</code> de este ejecutable podemos ver lo siguiente:</p>
+<p>Está ejecutando <code>run.sh</code> con una <code>/bin/bash</code> y al no tener una ruta absoluta, podemos hacer que ejecute ese <code>run.sh</code> y nos de una shell privilegiada.</p>
+<p>Creando el archivo <code>run.sh</code> en el directorio <code>/tmp</code> por ejemplo y metiendo dentro <code>bash -p</code> obtenemos una bash privilegiada:</p>
+<p>Eso es lo que podemos ver en el directorio <code>/root/flag</code>.</p>
+<p>Si levantamos un servidor php en ese mismo directorio con el comando: <code>php -S 0.0.0.0:8084</code>, esto es lo que podemos ver en el navegador:</p>
+<p>Máquina lista.</p></details><div class="actions"><a class="button" href="index.html#laboratorios">← Volver al catálogo</a></div></main><footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo · Laboratorios realizados en entornos de práctica.</div></footer></body></html>
