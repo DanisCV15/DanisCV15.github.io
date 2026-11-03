@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Laboratorio doméstico de Blue Team en Windows con LimaCharlie, Microsoft Defender y Endpoint Central.">
+  <title>Laboratorio Windows · Daniel Escolar</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="index.html">DE<b>.</b></a>
+      <nav aria-label="Navegación principal">
+        <a href="index.html#perfil">Perfil</a>
+        <a href="index.html#laboratorios">Laboratorios</a>
+        <a href="index.html#contacto">Contacto ↗</a>
+      </nav>
+    </div>
+  </header>
+  <main id="contenido" class="article">
+    <a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a>
+    <p class="eyebrow">Proyecto personal · Blue Team · Noviembre de 2026</p>
+    <h1>Laboratorio Windows: del evento a la respuesta</h1>
+    <p class="lead">En un equipo Windows de casa comprobé qué ocurre desde que se ejecuta un proceso hasta que aparece una alerta. Después probé un análisis desde la consola y verifiqué el resultado de una tarea de parcheo.</p>
+    <p class="tag">LimaCharlie · Microsoft Defender · Endpoint Central</p>
+
+    <h2>01 · Detectar un proceso</h2>
+    <p>Ejecuté <code>whoami</code> para generar una señal controlada. La regla de LimaCharlie produjo una alerta con la ruta del ejecutable y la línea de comandos. Esto permitió comprobar el recorrido del evento hasta la consola con una actividad legítima y fácil de repetir.</p>
+
+    <h2>02 · Verificar la telemetría de Defender</h2>
+    <p>Usé EICAR como archivo de prueba. En LimaCharlie apareció un evento de actividad de Microsoft Defender cuyo detalle identificaba EICAR. La evidencia confirmaba que el evento del antivirus llegaba a la consola.</p>
+
+    <h2>03 · Ejecutar un análisis desde la consola</h2>
+    <p>El primer análisis de una carpeta devolvió un error porque el comando no aceptaba el argumento que había usado para indicar la ruta. Volví a enviarlo con la ruta como argumento posicional y la consola devolvió éxito con código de error <code>0</code>. La respuesta permitió distinguir un fallo de sintaxis de un problema de conexión con el sensor.</p>
+
+    <h2>04 · Comprobar el parcheo por equipo</h2>
+    <p>En Endpoint Central revisé la tarea de actualización automática en la vista por sistema. Para el equipo del laboratorio, esa tarea mostraba <strong>un parche instalado, cero fallidos y cero pendientes</strong>. Ese resultado corresponde al alcance de la tarea revisada.</p>
+
+    <h2>Evaluación adicional de Xcitium EXDR</h2>
+    <p>Revisé la compatibilidad con Windows y el historial de instalación del agente. El historial mostraba una instalación completada y una entrada posterior en cola. Quedó pendiente validar las detecciones en esa plataforma.</p>
+
+    <h2>Qué me llevo del laboratorio</h2>
+    <p>La alerta de <code>whoami</code> sirvió para verificar la telemetría. Para evaluar una regla destinada a un entorno real, probaría también casos legítimos y sospechosos y ajustaría el contexto de la detección. En respuesta y parcheo, buscaría siempre la confirmación de la acción y su alcance en el equipo.</p>
+    <div class="actions"><a class="button" href="index.html#laboratorios">← Volver a los laboratorios</a></div>
+  </main>
+  <footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo</div></footer>
+</body>
+</html>
