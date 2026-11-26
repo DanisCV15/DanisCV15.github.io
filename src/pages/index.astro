@@ -1,0 +1,139 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const labs = (await getCollection('labs')).sort((a, b) => a.data.order - b.data.order);
+const proyectos = (await getCollection('proyectos')).sort((a, b) => a.data.order - b.data.order);
+const total = labs.length;
+const pad = (n: number) => String(n).padStart(2, '0');
+const linkedin = 'https://www.linkedin.com/in/daniel-escolar-martin-b644a6249/';
+---
+<Base
+  title="Daniel Escolar · Ciberseguridad y desarrollo"
+  description="Portfolio de Daniel Escolar: ciberseguridad junior, SOC, Blue Team y laboratorios documentados."
+  og={{
+    type: 'website',
+    title: 'Daniel Escolar · Ciberseguridad y desarrollo',
+    description: 'Ciberseguridad junior, SOC y Blue Team: proyectos y laboratorios documentados paso a paso.',
+    url: 'https://daniscv15.github.io/',
+    image: 'shot-observatorio-historico.png',
+  }}
+  footer="Daniel Escolar · Ciberseguridad y desarrollo · Laboratorios realizados en entornos de práctica."
+>
+  <div class="wrap">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Ciberseguridad junior · SOC / Blue Team</p>
+        <h1>Daniel Escolar.<br><span>Entender el ataque.<br>Mejorar la defensa.</span></h1>
+        <p class="lead">Vengo del desarrollo web y sigo formándome en ciberseguridad. Me gusta entender cómo funcionan las aplicaciones, buscar dónde fallan y contar el proceso de las máquinas que voy haciendo.</p>
+        <div class="actions">
+          <a class="button primary" href="#laboratorios">Explorar laboratorios ↘</a>
+          <a class="button" href={linkedin}>Mi LinkedIn ↗</a>
+        </div>
+        <div class="stats">
+          <div><strong>{total}</strong><span>Laboratorios</span></div>
+          <div><strong>eJPTv2</strong><span>Certificación</span></div>
+          <div><strong>DAW</strong><span>Desarrollo web</span></div>
+        </div>
+      </div>
+      <aside class="terminal" aria-label="Áreas de práctica">
+        <div class="terminal-head">~/daniel/portfolio</div>
+        <div class="terminal-body">
+          <p><b>01</b> &nbsp;Observar y enumerar</p>
+          <p><b>02</b> &nbsp;Analizar los hallazgos</p>
+          <p><b>03</b> &nbsp;Validar en el laboratorio</p>
+          <p><b>04</b> &nbsp;Documentar el recorrido</p>
+          <p class="terminal-note">Linux · Windows · Web · Redes</p>
+          <p><b>→</b> Aprender haciendo<span aria-hidden="true"> _</span></p>
+        </div>
+      </aside>
+    </header>
+
+    <section id="perfil" class="split">
+      <div>
+        <p class="eyebrow">Perfil profesional</p>
+        <h2>De construir aplicaciones<br>a comprender su seguridad.</h2>
+        <p class="muted">Me oriento a puestos junior de SOC y Blue Team. Mi base en desarrollo me ayuda a comprender aplicaciones, APIs y los fallos que aparecen en los laboratorios.</p>
+        <div class="skills">
+          {['Python', 'Django', 'React', 'PostgreSQL', 'Linux / Windows', 'Análisis de redes'].map((s) => <span class="tag">{s}</span>)}
+        </div>
+      </div>
+      <div class="experience">
+        <article>
+          <p class="eyebrow">Experiencia · Sep–Dic 2025</p>
+          <h3>Desarrollador Web Junior · Zaitec Innova</h3>
+          <p class="muted">Trabajo con Django, React y PostgreSQL, APIs REST, autenticación JWT y roles.</p>
+        </article>
+        <article>
+          <p class="eyebrow">Formación</p>
+          <h3>Especialización en ciberseguridad · Finalizada</h3>
+          <p class="muted">Técnico Superior en Desarrollo de Aplicaciones Web y certificación eJPTv2.</p>
+        </article>
+        <article>
+          <p class="eyebrow">Práctica y aprendizaje</p>
+          <h3>SOC y seguridad ofensiva en laboratorio</h3>
+          <p class="muted">Estoy cursando SOC Level 1 en TryHackMe y sigo practicando con máquinas de laboratorio para afianzar lo aprendido.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="proyectos">
+      <p class="eyebrow">Proyectos / Herramientas propias</p>
+      <h2>Proyectos.</h2>
+      <p class="lead">Herramientas que he programado, con capturas y una explicación de cómo funcionan.</p>
+      {proyectos.map(({ id, data }) => (
+        <a class="feature" href={`proyecto-${id}.html`}>
+          <div class="feature-text">
+            <div class="top"><span>{data.kind}</span><span class="number">{data.year}</span></div>
+            <h3>{data.cardTitle}</h3>
+            <p>{data.cardSummary}</p>
+            <span class="tags">{data.cardTags}</span>
+            <span class="read">{data.readLabel} <span aria-hidden="true">↗</span></span>
+          </div>
+          <img src={data.cardImage} alt={data.cardImageAlt} width="1904" height="942" loading="lazy" decoding="async">
+        </a>
+      ))}
+    </section>
+
+    <section id="laboratorios">
+      <p class="eyebrow">Trabajo práctico / 01—{pad(total)}</p>
+      <h2>Laboratorios, paso a paso.</h2>
+      <p class="lead">Documentación de máquinas y proyectos de defensa. En cada caso cuento qué pruebo, qué evidencia encuentro y hasta dónde llega la comprobación.</p>
+      <div class="toolbar">
+        <input id="search" type="search" aria-label="Buscar laboratorios" placeholder="Buscar por máquina, técnica o herramienta…">
+        <select id="system" aria-label="Filtrar por sistema">
+          <option value="">Todos los sistemas</option>
+          <option value="Linux">Linux</option>
+          <option value="Windows">Windows</option>
+        </select>
+      </div>
+      <p id="count" role="status" aria-live="polite">{total} laboratorios</p>
+      <div class="grid">
+        {labs.map(({ id, data }) => (
+          <a class="card" href={`lab-${id}.html`} data-system={data.system} data-search={data.keywords}>
+            <div class="top"><span>{data.system} / {data.kind}</span><span class="number">{pad(data.number)}</span></div>
+            <h3>{data.cardTitle ?? data.title}</h3>
+            <p>{data.cardSummary ?? data.summary}</p>
+            <span class="tags">{data.tags.join(' · ')}</span>
+            <span class="read">{data.readLabel} <span aria-hidden="true">↗</span></span>
+          </a>
+        ))}
+      </div>
+      <p id="empty" hidden class="muted">No hay laboratorios que coincidan. Prueba otra búsqueda.</p>
+      <noscript><p class="notice">El catálogo completo está disponible. Activa JavaScript para utilizar la búsqueda y los filtros.</p></noscript>
+    </section>
+
+    <section id="contacto" class="contact">
+      <div>
+        <p class="eyebrow">Hablemos</p>
+        <h2>Mi siguiente paso:<br>seguir aprendiendo en equipo.</h2>
+        <p class="muted">Busco oportunidades junior en ciberseguridad, SOC y Blue Team. Puedes conocer mi trayectoria y contactar conmigo en LinkedIn.</p>
+      </div>
+      <div class="actions">
+        <a class="button primary" href={linkedin}>Contactar por LinkedIn ↗</a>
+        <a class="button" href="https://github.com/DanisCV15">GitHub ↗</a>
+      </div>
+    </section>
+  </div>
+  <script slot="scripts" src="script.js" defer is:inline></script>
+</Base>

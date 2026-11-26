@@ -1,0 +1,54 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  og?: { type: string; title: string; description: string; url: string; image?: string };
+  footer?: string;
+  mainClass?: string;
+}
+const { title, description, og, footer = 'Daniel Escolar · Ciberseguridad y desarrollo', mainClass } = Astro.props;
+const site = Astro.site?.href ?? '';
+---
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content={description}>
+  {og && (
+    <>
+      <meta property="og:type" content={og.type}>
+      <meta property="og:title" content={og.title}>
+      <meta property="og:description" content={og.description}>
+      <meta property="og:url" content={og.url}>
+      {og.image && <meta property="og:image" content={new URL(og.image, site).href}>}
+      {og.image && <meta name="twitter:card" content="summary_large_image">}
+    </>
+  )}
+  <title>{title}</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="index.html">DE<b>.</b></a>
+      <nav aria-label="Navegación principal">
+        <a href="index.html#perfil">Perfil</a>
+        <a href="index.html#proyectos">Proyectos</a>
+        <a href="index.html#laboratorios">Laboratorios</a>
+        <a href="index.html#contacto">Contacto ↗</a>
+      </nav>
+    </div>
+  </header>
+  <main id="contenido" class={mainClass}>
+    <slot />
+  </main>
+  <footer><div class="wrap">{footer}</div></footer>
+  <slot name="scripts" />
+</body>
+</html>
