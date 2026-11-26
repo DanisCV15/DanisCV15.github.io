@@ -1,12 +1,27 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import LabCard from '../components/LabCard.astro';
+import { AUTHOR, personJsonLd, slugify, tagHref } from '../lib/site';
 
 const labs = (await getCollection('labs')).sort((a, b) => a.data.order - b.data.order);
 const proyectos = (await getCollection('proyectos')).sort((a, b) => a.data.order - b.data.order);
 const total = labs.length;
 const pad = (n: number) => String(n).padStart(2, '0');
-const linkedin = 'https://www.linkedin.com/in/daniel-escolar-martin-b644a6249/';
+const linkedin = AUTHOR.linkedin;
+// Etiquetas que aparecen en al menos dos laboratorios, de más a menos usadas.
+const tagCounts = new Map<string, { name: string; n: number }>();
+for (const lab of labs) for (const name of lab.data.tags) {
+  const t = tagCounts.get(slugify(name)) ?? { name, n: 0 };
+  t.n++; tagCounts.set(slugify(name), t);
+}
+const topTags = [...tagCounts.values()].filter((t) => t.n > 1).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'es'));
+const jsonld = {
+  '@graph': [
+    { ...personJsonLd(Astro.site), '@id': `${Astro.site?.href}#persona`, jobTitle: AUTHOR.jobTitle },
+    { '@type': 'WebSite', name: 'Daniel Escolar · Ciberseguridad y desarrollo', url: Astro.site?.href, inLanguage: 'es', author: { '@id': `${Astro.site?.href}#persona` } },
+  ],
+};
 ---
 <Base
   title="Daniel Escolar · Ciberseguridad y desarrollo"
@@ -16,8 +31,10 @@ const linkedin = 'https://www.linkedin.com/in/daniel-escolar-martin-b644a6249/';
     title: 'Daniel Escolar · Ciberseguridad y desarrollo',
     description: 'Ciberseguridad junior, SOC y Blue Team: proyectos y laboratorios documentados paso a paso.',
     url: 'https://daniscv15.github.io/',
-    image: 'shot-observatorio-historico.png',
+    image: 'og/index.png',
+    imageAlt: 'Daniel Escolar: ciberseguridad junior, SOC y Blue Team',
   }}
+  jsonld={jsonld}
   footer="Daniel Escolar · Ciberseguridad y desarrollo · Laboratorios realizados en entornos de práctica."
 >
   <div class="wrap">
@@ -100,24 +117,20 @@ const linkedin = 'https://www.linkedin.com/in/daniel-escolar-martin-b644a6249/';
       <h2>Laboratorios, paso a paso.</h2>
       <p class="lead">Documentación de máquinas y proyectos de defensa. En cada caso cuento qué pruebo, qué evidencia encuentro y hasta dónde llega la comprobación.</p>
       <div class="toolbar">
-        <input id="search" type="search" aria-label="Buscar laboratorios" placeholder="Buscar por máquina, técnica o herramienta…">
+        <input id="search" type="search" aria-label="Buscar laboratorios" placeholder="Buscar en el texto de los laboratorios: máquina, técnica, comando…">
         <select id="system" aria-label="Filtrar por sistema">
           <option value="">Todos los sistemas</option>
           <option value="Linux">Linux</option>
           <option value="Windows">Windows</option>
         </select>
       </div>
+      <nav class="tag-index" aria-label="Laboratorios por etiqueta">
+        <span class="muted">Por etiqueta:</span>
+        {topTags.map((t) => <a href={tagHref(t.name)}>{t.name} <span class="muted">{t.n}</span></a>)}
+      </nav>
       <p id="count" role="status" aria-live="polite">{total} laboratorios</p>
       <div class="grid">
-        {labs.map(({ id, data }) => (
-          <a class="card" href={`lab-${id}.html`} data-system={data.system} data-search={data.keywords}>
-            <div class="top"><span>{data.system} / {data.kind}</span><span class="number">{pad(data.number)}</span></div>
-            <h3>{data.cardTitle ?? data.title}</h3>
-            <p>{data.cardSummary ?? data.summary}</p>
-            <span class="tags">{data.tags.join(' · ')}</span>
-            <span class="read">{data.readLabel} <span aria-hidden="true">↗</span></span>
-          </a>
-        ))}
+        {labs.map((lab) => <LabCard lab={lab} />)}
       </div>
       <p id="empty" hidden class="muted">No hay laboratorios que coincidan. Prueba otra búsqueda.</p>
       <noscript><p class="notice">El catálogo completo está disponible. Activa JavaScript para utilizar la búsqueda y los filtros.</p></noscript>
@@ -135,5 +148,5 @@ const linkedin = 'https://www.linkedin.com/in/daniel-escolar-martin-b644a6249/';
       </div>
     </section>
   </div>
-  <script slot="scripts" src="script.js" defer is:inline></script>
+  <script slot="scripts" src="/script.js" defer is:inline></script>
 </Base>

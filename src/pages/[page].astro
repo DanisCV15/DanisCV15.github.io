@@ -2,6 +2,7 @@
 // Una página por laboratorio (lab-<id>.html) y por proyecto (proyecto-<id>.html).
 import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import { personJsonLd, tagHref } from '../lib/site';
 
 export async function getStaticPaths() {
   const labs = (await getCollection('labs')).map((entry) => ({
@@ -19,25 +20,41 @@ const { entry, kind } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data as any;
 const isLab = kind === 'lab';
+const page = Astro.params.page;
+const url = new URL(`${page}.html`, Astro.site).href;
 
 const title = d.pageTitle ?? `${d.title} · Daniel Escolar`;
 const description = d.description ?? `${d.title} — Laboratorios de ciberseguridad de Daniel Escolar.`;
 const eyebrow = d.eyebrow ?? `${d.system} · ${d.kind}`;
-const tagLine = d.tagLine ?? d.tags.join(' · ');
 const back = isLab
   ? { href: 'index.html#laboratorios', top: '← Todos los laboratorios', bottom: '← Volver a los laboratorios' }
   : { href: 'index.html#proyectos', top: '← Todos los proyectos', bottom: '← Volver a los proyectos' };
-const og = isLab ? undefined : {
-  type: 'article', title, description: d.ogDescription ?? description,
-  url: new URL(`${Astro.params.page}.html`, Astro.site).href, image: d.image,
+const image = isLab ? `og/${page}.png` : d.image;
+const og = {
+  type: 'article', title, url, image,
+  description: d.ogDescription ?? (isLab ? d.summary : description),
+  imageAlt: isLab ? `${d.title}: ${d.summary}` : d.cardImageAlt,
+};
+const jsonld = {
+  '@type': 'TechArticle',
+  headline: d.title,
+  description: og.description,
+  inLanguage: 'es',
+  url,
+  image: new URL(image, Astro.site).href,
+  author: personJsonLd(Astro.site),
+  keywords: isLab ? d.tags.join(', ') : d.tagLine,
 };
 ---
-<Base title={title} description={description} og={og} mainClass="article">
-  <a class="muted" href={back.href}>{back.top}</a>
+<Base title={title} description={description} og={og} jsonld={jsonld} mainClass="article" searchable>
+  <a class="muted" href={back.href} data-pagefind-ignore>{back.top}</a>
   <p class="eyebrow">{eyebrow}</p>
   <h1>{d.title}</h1>
   <p class="lead">{d.summary}</p>
-  <p class="tag">{tagLine}</p>
+  {isLab && !d.tagLine
+    ? <p class="tag tag-links">{d.tags.map((t: string, i: number) => <>{i > 0 && ' · '}<a href={tagHref(t)}>{t}</a></>)}</p>
+    : <p class="tag">{d.tagLine}</p>}
   <Content />
-  <div class="actions"><a class="button" href={back.href}>{back.bottom}</a></div>
+  <div class="actions" data-pagefind-ignore><a class="button" href={back.href}>{back.bottom}</a></div>
+  <script slot="scripts" src="/visor.js" defer is:inline></script>
 </Base>

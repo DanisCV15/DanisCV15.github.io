@@ -1,0 +1,48 @@
+---
+// Una página por etiqueta (etiqueta-suid.html) con los laboratorios que la usan.
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import LabCard from '../components/LabCard.astro';
+import { slugify, tagHref } from '../lib/site';
+
+export async function getStaticPaths() {
+  const labs = (await getCollection('labs')).sort((a, b) => a.data.order - b.data.order);
+  const byTag = new Map<string, { name: string; labs: typeof labs }>();
+  for (const lab of labs) {
+    for (const name of lab.data.tags) {
+      const slug = slugify(name);
+      if (!byTag.has(slug)) byTag.set(slug, { name, labs: [] });
+      byTag.get(slug)!.labs.push(lab);
+    }
+  }
+  const all = [...byTag.values()].sort((a, b) => b.labs.length - a.labs.length || a.name.localeCompare(b.name, 'es'));
+  return [...byTag].map(([tag, { name, labs }]) => ({ params: { tag }, props: { name, labs, all } }));
+}
+
+const { name, labs, all } = Astro.props;
+const n = labs.length;
+const title = `${name} · Laboratorios · Daniel Escolar`;
+const description = `${n} laboratorio${n === 1 ? '' : 's'} de ciberseguridad de Daniel Escolar con la etiqueta ${name}.`;
+---
+<Base title={title} description={description}
+  og={{ type: 'website', title, description, url: new URL(tagHref(name), Astro.site).href, image: 'og/index.png' }}>
+  <div class="wrap">
+    <section class="tag-page">
+      <a class="muted" href="index.html#laboratorios">← Todos los laboratorios</a>
+      <p class="eyebrow">Etiqueta</p>
+      <h1>{name}</h1>
+      <p class="lead">{n} laboratorio{n === 1 ? '' : 's'} con esta etiqueta.</p>
+      <div class="grid">
+        {labs.map((lab) => <LabCard lab={lab} />)}
+      </div>
+    </section>
+    <section>
+      <h2>Otras etiquetas</h2>
+      <ul class="tag-cloud">
+        {all.filter((t) => t.name !== name).map((t) => (
+          <li><a class="tag" href={tagHref(t.name)}>{t.name} <span aria-label={`${t.labs.length} laboratorios`}>{t.labs.length}</span></a></li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</Base>

@@ -528,3 +528,144 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* Buscador: fragmento del texto donde aparece la búsqueda */
+.card .hit {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+.card .hit mark {
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Etiquetas */
+.tag-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-size: 13px;
+  margin: 0 0 15px;
+}
+.tag-index a:hover .muted {
+  color: inherit;
+}
+.tag-links a {
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.tag-page {
+  border-top: 0;
+}
+.tag-page h1 {
+  font-size: clamp(38px, 6vw, 60px);
+}
+.tag-cloud {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.tag-cloud .tag {
+  display: inline-block;
+  font-size: 13px;
+}
+.tag-cloud .tag span {
+  color: var(--accent);
+  margin-left: 4px;
+}
+
+/* 404 */
+.not-found {
+  border-top: 0;
+  min-height: 60vh;
+}
+
+/* Visor de capturas */
+.visor {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 56px 72px 24px;
+  border: 0;
+  background: #0b1118f2;
+  color: var(--text);
+}
+.visor::backdrop {
+  background: #0b1118cc;
+}
+.visor figure {
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+.visor img {
+  max-width: 100%;
+  max-height: calc(100% - 40px);
+  object-fit: contain;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+.visor figcaption {
+  font-size: 13px;
+  color: var(--muted);
+  display: flex;
+  gap: 16px;
+}
+.visor button {
+  position: absolute;
+  font: 600 20px/1 "DM Sans", sans-serif;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  width: 44px;
+  height: 44px;
+  cursor: pointer;
+}
+.visor button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.visor-close {
+  top: 8px;
+  right: 16px;
+}
+.visor-prev,
+.visor-next {
+  top: 50%;
+  transform: translateY(-50%);
+}
+.visor-prev {
+  left: 14px;
+}
+.visor-next {
+  right: 14px;
+}
+.visor button[hidden] {
+  display: none;
+}
+@media (max-width: 550px) {
+  .visor {
+    padding: 56px 12px 72px;
+  }
+  .visor-prev,
+  .visor-next {
+    top: auto;
+    bottom: 14px;
+    transform: none;
+  }
+}

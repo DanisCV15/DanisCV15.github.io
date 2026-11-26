@@ -6,6 +6,15 @@ https://daniscv15.github.io/
 
 Hecho con [Astro](https://astro.build). Cada laboratorio y cada proyecto es un archivo Markdown; la portada, los contadores y las tarjetas se generan a partir de ellos. GitHub Actions compila la web y la publica en GitHub Pages con cada cambio en `main`.
 
+## Qué se genera al compilar
+
+- Una página por laboratorio y proyecto, y una por etiqueta (`etiqueta-suid.html`) con los laboratorios que la usan.
+- Una imagen de vista previa de 1200×630 por laboratorio y para la portada (`og/`), para cuando se comparte un enlace en LinkedIn. Se dibuja con satori y resvg a partir del título, el resumen y las etiquetas.
+- El índice del buscador con [Pagefind](https://pagefind.app): busca en el texto completo de los laboratorios, no solo en el título.
+- `sitemap-index.xml`, `robots.txt`, la página 404 y datos estructurados (JSON-LD) para buscadores.
+
+Las capturas se abren en un visor dentro de la página (flechas para pasar, Escape para cerrar). Sin JavaScript, el enlace abre la imagen en una pestaña nueva.
+
 ## Probar en local
 
 Requiere Node.js 22.23 o posterior.
@@ -13,7 +22,8 @@ Requiere Node.js 22.23 o posterior.
 ```sh
 npm install
 npm run dev      # servidor de desarrollo en http://localhost:4321
-npm run build    # genera la web en dist/
+npm run build    # genera la web y el índice del buscador en dist/
+npm run preview  # sirve dist/ para probarla como en producción (el buscador solo funciona tras build)
 ```
 
 ## Añadir un laboratorio
@@ -56,6 +66,9 @@ src/content/proyectos/   proyectos en Markdown
 src/pages/index.astro    portada
 src/pages/[page].astro   plantilla de laboratorios y proyectos
 src/layouts/Base.astro   cabecera, pie y metadatos comunes
-src/lib/                 plugin que convierte imágenes en capturas ampliables
-public/                  capturas, estilos, favicon y script del buscador
+src/pages/etiqueta-[tag].astro   páginas por etiqueta
+src/pages/og/            imágenes de vista previa
+src/components/          tarjeta de laboratorio
+src/lib/                 plugin de capturas y utilidades comunes
+public/                  capturas, estilos, favicon, buscador (script.js) y visor (visor.js)
 ```
