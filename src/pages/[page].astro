@@ -1,0 +1,43 @@
+---
+// Una página por laboratorio (lab-<id>.html) y por proyecto (proyecto-<id>.html).
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const labs = (await getCollection('labs')).map((entry) => ({
+    params: { page: `lab-${entry.id}` },
+    props: { entry, kind: 'lab' as const },
+  }));
+  const proyectos = (await getCollection('proyectos')).map((entry) => ({
+    params: { page: `proyecto-${entry.id}` },
+    props: { entry, kind: 'proyecto' as const },
+  }));
+  return [...labs, ...proyectos];
+}
+
+const { entry, kind } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data as any;
+const isLab = kind === 'lab';
+
+const title = d.pageTitle ?? `${d.title} · Daniel Escolar`;
+const description = d.description ?? `${d.title} — Laboratorios de ciberseguridad de Daniel Escolar.`;
+const eyebrow = d.eyebrow ?? `${d.system} · ${d.kind}`;
+const tagLine = d.tagLine ?? d.tags.join(' · ');
+const back = isLab
+  ? { href: 'index.html#laboratorios', top: '← Todos los laboratorios', bottom: '← Volver a los laboratorios' }
+  : { href: 'index.html#proyectos', top: '← Todos los proyectos', bottom: '← Volver a los proyectos' };
+const og = isLab ? undefined : {
+  type: 'article', title, description: d.ogDescription ?? description,
+  url: new URL(`${Astro.params.page}.html`, Astro.site).href, image: d.image,
+};
+---
+<Base title={title} description={description} og={og} mainClass="article">
+  <a class="muted" href={back.href}>{back.top}</a>
+  <p class="eyebrow">{eyebrow}</p>
+  <h1>{d.title}</h1>
+  <p class="lead">{d.summary}</p>
+  <p class="tag">{tagLine}</p>
+  <Content />
+  <div class="actions"><a class="button" href={back.href}>{back.bottom}</a></div>
+</Base>
