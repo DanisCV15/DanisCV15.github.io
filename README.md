@@ -1,6 +1,6 @@
 # Portfolio de Daniel Escolar
 
-Ciberseguridad, desarrollo web y 23 laboratorios explicados paso a paso, con capturas propias.
+Ciberseguridad, desarrollo web, proyectos propios y 24 laboratorios explicados paso a paso, con capturas propias.
 
 https://daniscv15.github.io/
 

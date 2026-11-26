@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Observatorio: panel local que recoge avisos de seguridad públicos y los contrasta con un inventario de software para decidir qué revisar.">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Observatorio · Daniel Escolar">
+  <meta property="og:description" content="Panel local que recoge avisos de seguridad públicos y los contrasta con un inventario de software.">
+  <meta property="og:url" content="https://daniscv15.github.io/proyecto-observatorio.html">
+  <meta property="og:image" content="https://daniscv15.github.io/shot-observatorio-historico.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <title>Observatorio · Daniel Escolar</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"><link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip" href="#contenido">Saltar al contenido</a>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="index.html">DE<b>.</b></a>
+      <nav aria-label="Navegación principal">
+        <a href="index.html#perfil">Perfil</a><a href="index.html#proyectos">Proyectos</a>
+        <a href="index.html#laboratorios">Laboratorios</a>
+        <a href="index.html#contacto">Contacto ↗</a>
+      </nav>
+    </div>
+  </header>
+  <main id="contenido" class="article">
+    <a class="muted" href="index.html#proyectos">← Todos los proyectos</a>
+    <p class="eyebrow">Proyecto personal · Gestión de vulnerabilidades · Noviembre de 2026</p>
+    <h1>Observatorio: avisos de seguridad frente a un inventario</h1>
+    <p class="lead">Cada día se publican decenas de avisos de seguridad. La mayoría no afecta a los equipos que gestionas. Observatorio los recoge de fuentes públicas, los contrasta con un inventario de software y separa lo que está respaldado por evidencia de lo que todavía es una sospecha.</p>
+    <p class="tag">Node.js · JavaScript · HTML y CSS · Desarrollado con Codex</p>
+
+    <p class="intro">Lo desarrollé con ayuda de Codex, el agente de programación de OpenAI. Yo definí qué debía decidir la herramienta, revisé sus criterios y lo probé con un inventario real. El repositorio es privado. Las capturas son de una instalación en uso y solo muestran avisos públicos.</p>
+
+    <h2>El problema</h2>
+    <p>Leer los boletines de fabricantes y blogs de seguridad no basta. Cada aviso hay que cruzarlo con lo que tienes instalado, con la versión exacta y con el criterio del proveedor. Cuando se hace a mano, es fácil dar un servidor por afectado solo porque usa la misma tecnología que menciona la noticia, o por corregido sin haberlo comprobado.</p>
+    <p>Quería una herramienta que hiciera ese cruce de forma repetible y que dijera siempre qué falta para confirmar un caso.</p>
+
+    <h2>Cómo funciona</h2>
+    <pre><code>Fuentes públicas → recogida y deduplicación → contraste ← inventario local
+                                                  ↓
+Navegador ⇄ servidor Node.js local ⇄ estado en JSON
+                     ↓
+          consultas opcionales a Codex</code></pre>
+    <ul>
+      <li><strong>Recogida.</strong> Consulta hasta 20 fuentes por pasada (fabricantes, blogs de investigación, índices públicos), con dos descargas simultáneas y deduplicación por URL.</li>
+      <li><strong>Contraste.</strong> Compara cada aviso con el inventario por proveedor, distribución, paquete y versión.</li>
+      <li><strong>Seguimiento.</strong> Cada caso conserva el día en que se detectó, sus revisiones y el siguiente paso.</li>
+      <li><strong>Consultas con IA.</strong> Opcionales. Se preparan con referencias, las envía el usuario y la respuesta vuelve a la aplicación con sus fuentes.</li>
+    </ul>
+
+    <h2>Tres resultados, no dos</h2>
+    <p>La decisión de diseño más importante fue no reducirlo todo a «afectado» o «no afectado».</p>
+    <ul>
+      <li><strong>Coincidencia comprobada:</strong> el alcance del aviso y la evidencia del componente concreto respaldan la relación con el inventario.</li>
+      <li><strong>Posible relación:</strong> falta identificar el producto, el componente o un criterio aplicable. Una mención genérica a una tecnología no asigna servidores.</li>
+      <li><strong>Informativa:</strong> el artículo es documentación o contexto, sin una vulnerabilidad que se pueda evaluar por versiones.</li>
+    </ul>
+    <p>También separé lo que acredita cada dato. Que la versión instalada incluya la corrección prueba el resultado a nivel de paquete. No prueba que los procesos en marcha hayan cargado el parche, ni la configuración efectiva, ni la exposición. La herramienta lo dice en cada ficha.</p>
+
+    <h2>Las vistas</h2>
+    <figure>
+      <a href="shot-observatorio-historico.png"><img src="shot-observatorio-historico.png" alt="Histórico de coincidencias con indicadores, filtros y agrupación por día de detección" width="1904" height="942" loading="lazy" decoding="async"></a>
+      <figcaption>Histórico. Indicadores de casos, filtros por estado y agrupación por día de detección.</figcaption>
+    </figure>
+    <figure>
+      <a href="shot-observatorio-ficha.png"><img src="shot-observatorio-ficha.png" alt="Ficha de un aviso pendiente de validar, con el siguiente paso y los datos que faltan" width="1018" height="862" loading="lazy" decoding="async"></a>
+      <figcaption>Ficha de un aviso. Estado del contraste, fechas de la evidencia, siguiente paso y qué falta para confirmar.</figcaption>
+    </figure>
+    <figure>
+      <a href="shot-observatorio-relaciones.png"><img src="shot-observatorio-relaciones.png" alt="Cuadrícula de avisos clasificados como posible relación, sin servidores asociados" width="1897" height="944" loading="lazy" decoding="async"></a>
+      <figcaption>Posibles relaciones. Avisos que mencionan tecnologías conocidas pero que aún no se asignan a ningún servidor.</figcaption>
+    </figure>
+    <figure>
+      <a href="shot-observatorio-fuentes.png"><img src="shot-observatorio-fuentes.png" alt="Panel de fuentes con frecuencia de recogida y estado de cada canal" width="1904" height="943" loading="lazy" decoding="async"></a>
+      <figcaption>Fuentes. Frecuencia de recogida y estado de la última consulta de cada canal.</figcaption>
+    </figure>
+
+    <h2>Seguridad de la propia herramienta</h2>
+    <p>Un panel que guarda un inventario de servidores es un objetivo interesante, así que lo traté como tal:</p>
+    <ul>
+      <li>El servidor solo escucha en <code>127.0.0.1</code> y valida las cabeceras <code>Host</code> y <code>Origin</code>.</li>
+      <li>Las escrituras exigen una cabecera propia y la interfaz aplica una política CSP.</li>
+      <li>Antes de descargar una fuente se filtran las IP privadas y la IP resuelta queda fijada, lo que evita ataques de DNS rebinding.</li>
+      <li>El estado se guarda de forma atómica con control de revisión. El HTML se escapa y las URL se validan antes de mostrarlas.</li>
+      <li>La distribución publicada lleva SSH deshabilitado. Las consultas de lectura por SSH solo se conservan para pruebas simuladas.</li>
+    </ul>
+
+    <h2>Pruebas</h2>
+    <p>Tres comprobaciones automáticas cubren la clasificación por proveedor y componente, la retención del histórico, las actualizaciones parciales y la combinación de varios datos por servidor. Usan inventarios ficticios y respuestas SSH simuladas.</p>
+
+    <h2>Qué mejoraría</h2>
+    <p>Hice una revisión del código y el diseño después de la primera versión. Lo pendiente:</p>
+    <ul>
+      <li>Unificar el inventario: el motor y la vista de servidores leen hoy de fuentes distintas.</li>
+      <li>Adaptar la interfaz a móvil, que a 400 px de ancho se desborda.</li>
+      <li>Dividir los archivos más grandes del frontend y añadir pruebas de interfaz, porque ahora solo se prueba el backend.</li>
+      <li>Evitar releer el estado completo en cada petición.</li>
+    </ul>
+
+    <h2>Qué me llevo</h2>
+    <p>El valor no está en recoger noticias, sino en ser honesto con lo que demuestra cada dato. Separar «coincide», «podría coincidir» y «está corregido según la versión» cambia la conversación con quien tiene que decidir qué se parchea primero.</p>
+    <div class="actions"><a class="button" href="index.html#proyectos">← Volver a los proyectos</a></div>
+  </main>
+  <footer><div class="wrap">Daniel Escolar · Ciberseguridad y desarrollo</div></footer>
+</body>
+</html>
