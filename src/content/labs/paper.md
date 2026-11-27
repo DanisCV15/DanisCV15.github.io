@@ -7,6 +7,15 @@ order: 18
 summary: "Enumeración web, lectura de información mediante un bot y escalada con Polkit."
 tags: ["Web", "Bot", "Polkit"]
 keywords: "paper paper web · bot · polkit enumeración web, lectura de información mediante un bot y escalada con polkit."
+cadena:
+  - seccion: "La pista estaba en las cabeceras"
+    tecnicas: ["T1595", "T1190"]
+  - seccion: "Hablando con Recyclops"
+    tecnicas: ["T1083"]
+  - seccion: "Credenciales en el entorno del bot"
+    tecnicas: ["T1552.001", "T1021.004"]
+  - seccion: "Escalada con Polkit"
+    tecnicas: ["T1068", "T1136.001"]
 ---
 
 ## La pista estaba en las cabeceras

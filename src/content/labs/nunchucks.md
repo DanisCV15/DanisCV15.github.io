@@ -7,6 +7,15 @@ order: 16
 summary: "De una plantilla Nunjucks a ejecutar comandos como root con Perl."
 tags: ["SSTI", "Perl", "Capabilities"]
 keywords: "nunchucks nunchucks ssti · perl · capabilities de una plantilla nunjucks a ejecutar comandos como root con perl."
+cadena:
+  - seccion: "Buscando otra entrada en la web"
+    tecnicas: ["T1595.003"]
+  - seccion: "Inyección en Nunjucks"
+    tecnicas: ["T1190", "T1059.004"]
+  - seccion: "La capability de Perl"
+    tecnicas: ["T1548"]
+  - seccion: "Revisando AppArmor"
+    tecnicas: ["T1518.001"]
 ---
 
 ## Buscando otra entrada en la web

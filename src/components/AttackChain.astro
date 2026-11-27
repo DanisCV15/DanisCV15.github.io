@@ -1,0 +1,38 @@
+---
+// Cadena de ataque del laboratorio: cada sección del writeup con sus técnicas ATT&CK.
+import type { MarkdownHeading } from 'astro';
+import { TECHNIQUES, tacticName, techniqueUrl } from '../lib/attack';
+
+interface Props {
+  cadena: { seccion: string; tecnicas: string[] }[];
+  headings: MarkdownHeading[];
+  defensive?: boolean;
+}
+const { cadena, headings, defensive = false } = Astro.props;
+const steps = cadena.map((paso, i) => {
+  const heading = headings.find((h) => h.depth === 2 && h.text === paso.seccion);
+  if (!heading) throw new Error(`La sección «${paso.seccion}» de la cadena no existe en el writeup`);
+  return { n: String(i + 1).padStart(2, '0'), ...paso, slug: heading.slug };
+});
+---
+{steps.length > 0 && (
+  <nav class="cadena" aria-labelledby="cadena-titulo" data-pagefind-ignore>
+    <p class="eyebrow" id="cadena-titulo">{defensive ? 'Técnica detectada · MITRE ATT&CK' : 'Cadena de ataque · MITRE ATT&CK'}</p>
+    <ol>
+      {steps.map((s) => (
+        <li>
+          <a class="cadena-paso" href={`#${s.slug}`}><span class="cadena-n">{s.n}</span>{s.seccion}</a>
+          <ul class="cadena-tecnicas">
+            {s.tecnicas.map((id) => (
+              <li>
+                <a href={techniqueUrl(id)} target="_blank" rel="noopener" title={`${tacticName(TECHNIQUES[id].tactica)} · ${TECHNIQUES[id].nombre} (se abre en MITRE ATT&CK)`}>
+                  <b>{id}</b> {TECHNIQUES[id].nombre}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}

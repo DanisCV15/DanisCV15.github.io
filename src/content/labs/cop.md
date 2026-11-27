@@ -7,6 +7,11 @@ order: 8
 summary: "Análisis de una captura de tráfico y abuso de una capability de Python."
 tags: ["PCAP", "Capabilities"]
 keywords: "cop cap pcap · capabilities análisis de una captura de tráfico y abuso de una capability de python."
+cadena:
+  - seccion: "Un dashboard con capturas de red"
+    tecnicas: ["T1190", "T1021.004"]
+  - seccion: "La capability de Python"
+    tecnicas: ["T1548"]
 ---
 
 ## Un dashboard con capturas de red

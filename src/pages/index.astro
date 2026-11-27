@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import LabCard from '../components/LabCard.astro';
 import { AUTHOR, personJsonLd, slugify, tagHref } from '../lib/site';
+import { TACTICS, TECHNIQUES } from '../lib/attack';
 
 const labs = (await getCollection('labs')).sort((a, b) => a.data.order - b.data.order);
 const proyectos = (await getCollection('proyectos')).sort((a, b) => a.data.order - b.data.order);
@@ -15,6 +16,17 @@ for (const lab of labs) for (const name of lab.data.tags) {
   const t = tagCounts.get(slugify(name)) ?? { name, n: 0 };
   t.n++; tagCounts.set(slugify(name), t);
 }
+// Matriz ATT&CK: en cuántos laboratorios aparece cada técnica, agrupada por táctica.
+const techCount = new Map<string, number>();
+for (const lab of labs) for (const id of new Set(lab.data.cadena.flatMap((p) => p.tecnicas))) techCount.set(id, (techCount.get(id) ?? 0) + 1);
+const maxCount = Math.max(...techCount.values());
+const matrix = TACTICS.map((t) => ({
+  ...t,
+  techs: [...techCount].filter(([id]) => TECHNIQUES[id].tactica === t.id)
+    .map(([id, n]) => ({ id, n, nombre: TECHNIQUES[id].nombre }))
+    .sort((a, b) => b.n - a.n || a.id.localeCompare(b.id)),
+})).filter((t) => t.techs.length);
+const mappedLabs = labs.filter((l) => l.data.cadena.length).length;
 const topTags = [...tagCounts.values()].filter((t) => t.n > 1).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name, 'es'));
 const jsonld = {
   '@graph': [
@@ -112,6 +124,31 @@ const jsonld = {
       ))}
     </section>
 
+    <section id="tecnicas">
+      <p class="eyebrow">MITRE ATT&CK / {techCount.size} técnicas</p>
+      <h2>Técnicas practicadas.</h2>
+      <p class="lead">He mapeado cada paso de los {mappedLabs} laboratorios a técnicas de MITRE ATT&CK. Cuanto más intenso el color, en más laboratorios aparece. Pulsa una técnica para ver dónde la he usado.</p>
+      <div class="matrix">
+        {matrix.map((t) => (
+          <div class="matrix-col">
+            <h3>{t.nombre}</h3>
+            <ul>
+              {t.techs.map((x) => (
+                <li>
+                  <button type="button" class="tech" data-tecnica={x.id} aria-pressed="false" style={`--heat:${(x.n / maxCount).toFixed(2)}`}>
+                    <span class="tech-id">{x.id}</span>
+                    <span class="tech-name">{x.nombre}</span>
+                    <span class="tech-n" aria-label={`${x.n} laboratorio${x.n === 1 ? '' : 's'}`}>{x.n}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <p class="matrix-note muted">Dentro de cada laboratorio, las técnicas enlazan con su ficha en <a href="https://attack.mitre.org/" target="_blank" rel="noopener">MITRE ATT&CK ↗</a>.</p>
+    </section>
+
     <section id="laboratorios">
       <p class="eyebrow">Trabajo práctico / 01—{pad(total)}</p>
       <h2>Laboratorios, paso a paso.</h2>
@@ -128,6 +165,7 @@ const jsonld = {
         <span class="muted">Por etiqueta:</span>
         {topTags.map((t) => <a href={tagHref(t.name)}>{t.name} <span class="muted">{t.n}</span></a>)}
       </nav>
+      <p id="filtro-tecnica" class="filter-chip" hidden>Técnica <b></b> <button type="button">Quitar filtro ✕</button></p>
       <p id="count" role="status" aria-live="polite">{total} laboratorios</p>
       <div class="grid">
         {labs.map((lab) => <LabCard lab={lab} />)}

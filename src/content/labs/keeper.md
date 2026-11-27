@@ -7,6 +7,13 @@ order: 13
 summary: "Análisis de un volcado de KeePass y recuperación de acceso SSH privilegiado."
 tags: ["KeePass", "SSH"]
 keywords: "keeper keeper keepass · ssh análisis de un volcado de keepass y recuperación de acceso ssh privilegiado."
+cadena:
+  - seccion: "De Request Tracker a SSH"
+    tecnicas: ["T1078.001", "T1552", "T1021.004"]
+  - seccion: "Un volcado de KeePass"
+    tecnicas: ["T1555.005"]
+  - seccion: "La clave de root"
+    tecnicas: ["T1552.004"]
 ---
 
 ## De Request Tracker a SSH
@@ -31,7 +38,7 @@ Buscando la expresión que se alcanza a leer encuentro una referencia que ayuda 
 
 Dentro de KeePass recorremos las entradas hasta encontrar la información de acceso del servidor. En las notas hay una clave privada en formato PuTTY. La exportamos y la convertimos a formato OpenSSH con `puttygen`. Después restringimos sus permisos con `chmod 600` y la usamos para conectarnos:
 
-```
+```bash
 ssh root@10.10.11.227 -i id_rsa
 ```
 

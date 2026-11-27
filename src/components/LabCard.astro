@@ -1,16 +1,25 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import { thumbUrl } from '../lib/thumbs';
 
 interface Props {
   lab: CollectionEntry<'labs'>;
   /** Nivel del título: 3 en la portada (bajo un h2), 2 donde la tarjeta va justo bajo el h1. */
   level?: 2 | 3;
 }
-const { id, data } = Astro.props.lab;
+const { id, data, body } = Astro.props.lab;
 const Heading = Astro.props.level === 2 ? 'h2' : 'h3';
 const pad = (n: number) => String(n).padStart(2, '0');
+const thumb = thumbUrl(id, body);
+const tecnicas = [...new Set(data.cadena.flatMap((p) => p.tecnicas))];
 ---
-<a class="card" href={`lab-${id}.html`} data-system={data.system} data-search={data.keywords}>
+<a class="card" href={`lab-${id}.html`} data-system={data.system} data-search={data.keywords} data-tecnicas={tecnicas.join(' ')}>
+  <div class:list={['card-thumb', { 'card-thumb-empty': !thumb }]} aria-hidden="true">
+    {thumb
+      ? <img src={thumb} alt="" width="640" height="320" loading="lazy" decoding="async">
+      : <span>{data.system} · {data.kind}</span>}
+    {data.plataforma && <span class="card-platform">{data.plataforma}</span>}
+  </div>
   <div class="top"><span>{data.system} / {data.kind}</span><span class="number">{pad(data.number)}</span></div>
   <Heading class="card-title">{data.cardTitle ?? data.title}</Heading>
   <p>{data.cardSummary ?? data.summary}</p>

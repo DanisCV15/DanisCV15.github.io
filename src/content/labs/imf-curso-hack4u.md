@@ -7,6 +7,19 @@ order: 12
 summary: "Laboratorio guiado con enumeración web y explotación de un desbordamiento de búfer."
 tags: ["Web", "Buffer overflow"]
 keywords: "imf curso hack4u imf · hack4u web · buffer overflow laboratorio guiado con enumeración web y explotación de un desbordamiento de búfer."
+cadena:
+  - seccion: "Reconocimiento y primeras pistas"
+    tecnicas: ["T1595", "T1594"]
+  - seccion: "Entrando al panel"
+    tecnicas: ["T1190"]
+  - seccion: "Inyección SQL booleana"
+    tecnicas: ["T1190"]
+  - seccion: "Subida de archivos y acceso inicial"
+    tecnicas: ["T1505.003"]
+  - seccion: "Analizando agent"
+    tecnicas: ["T1083"]
+  - seccion: "Controlando el flujo del programa"
+    tecnicas: ["T1068"]
 ---
 
 ## Reconocimiento y primeras pistas
@@ -29,7 +42,7 @@ Mientras tanto revisamos la web con WhatWeb y desde el navegador. En la sección
 
 El login responde de forma distinta al probar `rmichaels`, lo que nos permite identificar un usuario válido. Probamos varias inyecciones sin conseguir entrar. Después revisamos cómo se comprueba la contraseña y probamos a enviar un array en lugar de una cadena:
 
-```
+```text
 username=rmichaels&password[]=test
 ```
 
@@ -81,7 +94,7 @@ Abrimos el binario con GDB y enviamos una entrada larga. Vemos que podemos sobre
 
 Revisamos las protecciones del binario y la aleatorización de memoria. En la resolución seguimos una técnica de salto a registro mediante una instrucción `call eax`, que permite dirigir la ejecución a nuestro shellcode. La estructura del payload queda así:
 
-```
+```python
 payload = shellcode + b"A" * (offset - len(shellcode)) + pack("<I", direccion)
 ```
 

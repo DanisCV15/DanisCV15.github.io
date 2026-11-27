@@ -6,6 +6,9 @@ const system = document.querySelector("#system");
 const countEl = document.querySelector("#count");
 const emptyEl = document.querySelector("#empty");
 const cards = [...document.querySelectorAll(".card")];
+const techButtons = [...document.querySelectorAll(".tech[data-tecnica]")];
+const techChip = document.querySelector("#filtro-tecnica");
+let activeTech = null; // técnica ATT&CK elegida en la matriz
 
 const norm = (s) =>
   s
@@ -53,8 +56,10 @@ function render() {
     const href = card.getAttribute("href");
     const inKeywords = norm(card.dataset.search || "").includes(query);
     const excerpt = query && !inKeywords ? textHits.get(href) : undefined;
+    const inTech = !activeTech || (card.dataset.tecnicas || "").split(" ").includes(activeTech);
     const match =
       (inKeywords || excerpt !== undefined) &&
+      inTech &&
       (!system.value || card.dataset.system === system.value);
     card.hidden = !match;
     if (match) count++;
@@ -95,6 +100,28 @@ async function onInput() {
   );
   render();
 }
+
+function setTech(id) {
+  activeTech = id;
+  for (const b of techButtons) b.setAttribute("aria-pressed", String(b.dataset.tecnica === id));
+  if (techChip) {
+    techChip.hidden = !id;
+    if (id) {
+      const b = techButtons.find((x) => x.dataset.tecnica === id);
+      techChip.querySelector("b").textContent = `${id} · ${b.querySelector(".tech-name").textContent}`;
+    }
+  }
+  render();
+}
+
+for (const b of techButtons) {
+  b.addEventListener("click", () => {
+    const id = b.dataset.tecnica === activeTech ? null : b.dataset.tecnica;
+    setTech(id);
+    if (id) document.querySelector("#laboratorios").scrollIntoView();
+  });
+}
+techChip?.querySelector("button").addEventListener("click", () => setTech(null));
 
 search.addEventListener("input", onInput);
 search.addEventListener("focus", loadPagefind, { once: true });

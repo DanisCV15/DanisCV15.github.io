@@ -7,13 +7,22 @@ order: 6
 summary: "Inyección en una aplicación, revisión de Git y abuso de una ruta relativa."
 tags: ["Inyección", "Git", "SUID"]
 keywords: "busqueda htb busqueda · htb inyección · git · suid inyección en una aplicación, revisión de git y abuso de una ruta relativa."
+cadena:
+  - seccion: "La función del buscador"
+    tecnicas: ["T1190", "T1059.006"]
+  - seccion: "Credenciales en Git"
+    tecnicas: ["T1552.001", "T1021.004"]
+  - seccion: "Revisando el script de sudo"
+    tecnicas: ["T1548.003", "T1552"]
+  - seccion: "Una ruta relativa"
+    tecnicas: ["T1574", "T1548.001"]
 ---
 
 ## La función del buscador
 
 La web es un buscador y muestra la versión `2.4.0`. Buscando cómo funciona encuentro que utiliza `eval()` de una forma que permite introducir código Python. Pruebo primero una inyección sencilla para ejecutar `id`:
 
-```
+```python
 ')+ str(__import__('os').system('id'))#
 ```
 

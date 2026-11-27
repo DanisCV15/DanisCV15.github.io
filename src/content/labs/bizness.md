@@ -7,6 +7,15 @@ order: 4
 summary: "Explotación web y análisis de datos de Apache Derby para alcanzar root."
 tags: ["Web", "Hashes"]
 keywords: "bizness bizness web · hashes explotación web y análisis de datos de apache derby para alcanzar root."
+cadena:
+  - seccion: "Encontrando la aplicación"
+    tecnicas: ["T1595", "T1595.003"]
+  - seccion: "Acceso inicial"
+    tecnicas: ["T1190"]
+  - seccion: "Los datos de Derby"
+    tecnicas: ["T1083", "T1552.001"]
+  - seccion: "Recuperando la contraseña"
+    tecnicas: ["T1110.002"]
 ---
 
 ## Encontrando la aplicación

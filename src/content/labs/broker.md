@@ -7,6 +7,13 @@ order: 5
 summary: "Acceso mediante ActiveMQ y abuso de Nginx ejecutado con sudo."
 tags: ["ActiveMQ", "Nginx"]
 keywords: "broker broker activemq · nginx acceso mediante activemq y abuso de nginx ejecutado con sudo."
+cadena:
+  - seccion: "Reconocimiento de ActiveMQ"
+    tecnicas: ["T1595", "T1078.001"]
+  - seccion: "El puerto era la clave"
+    tecnicas: ["T1190"]
+  - seccion: "Nginx con permisos de root"
+    tecnicas: ["T1548.003"]
 ---
 
 ## Reconocimiento de ActiveMQ
@@ -27,7 +34,7 @@ Preparamos `poc-linux.xml` con nuestros datos y lanzamos el script. Al principio
 
 Dentro de la máquina, `sudo -l` nos muestra que podemos ejecutar `/usr/sbin/nginx` como root. Podemos aprovecharlo para levantar un servidor con una configuración propia y leer archivos a los que nuestro usuario no tiene acceso. Creamos en `/tmp` un archivo de configuración que utiliza `user root`, escucha en el puerto `7777` y sirve `/` con el listado de directorios activado.
 
-```
+```nginx
 user root;
 worker_processes auto;
 pid /run/nginx2.pid;

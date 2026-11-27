@@ -7,6 +7,17 @@ order: 24
 summary: "Análisis de API, inyección de comandos y escalada tras revisar el entorno."
 tags: ["API", "Inyección", "Kernel"]
 keywords: "twomillion twomillion api · inyección · kernel análisis de api, inyección de comandos y escalada tras revisar el entorno."
+cadena:
+  - seccion: "Consiguiendo la invitación"
+    tecnicas: ["T1595"]
+  - seccion: "Enumeración de la API"
+    tecnicas: ["T1190"]
+  - seccion: "Inyección en la generación de VPN"
+    tecnicas: ["T1059.004"]
+  - seccion: "Credenciales en .env"
+    tecnicas: ["T1552.001", "T1021.004"]
+  - seccion: "La pista del correo"
+    tecnicas: ["T1105", "T1068"]
 ---
 
 ## Consiguiendo la invitación

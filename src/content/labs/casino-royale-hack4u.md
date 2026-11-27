@@ -7,6 +7,19 @@ order: 7
 summary: "Recorrido de enumeración, acceso web y escalada mediante un ejecutable privilegiado."
 tags: ["Web", "SUID", "Rutas relativas"]
 keywords: "casino royale hack4u casino royale · hack4u web · suid · rutas relativas recorrido de enumeración, acceso web y escalada mediante un ejecutable privilegiado."
+cadena:
+  - seccion: "Reconocimiento"
+    tecnicas: ["T1595", "T1595.003"]
+  - seccion: "El panel de PokerMax"
+    tecnicas: ["T1190"]
+  - seccion: "De PokerMax a Snowfox"
+    tecnicas: ["T1566.002"]
+  - seccion: "Lectura de archivos con XXE"
+    tecnicas: ["T1190"]
+  - seccion: "Del FTP a una shell"
+    tecnicas: ["T1078", "T1505.003", "T1552.001"]
+  - seccion: "El ejecutable SUID"
+    tecnicas: ["T1548.001", "T1574"]
 ---
 
 ## Reconocimiento
@@ -25,7 +38,7 @@ La enumeración web nos lleva a phpMyAdmin y a varias rutas de la aplicación. L
 
 Buscando esa versión en Searchsploit encontramos una forma de saltar la autenticación del panel. La aplicación confía en una cookie que podemos establecer desde el navegador:
 
-```
+```js
 javascript:document.cookie = "ValidUserAdmin=admin";
 ```
 

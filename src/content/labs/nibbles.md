@@ -7,6 +7,13 @@ order: 15
 summary: "Acceso a Nibbleblog, subida de archivos y escalada mediante un script."
 tags: ["Web", "Subida de archivos", "Sudo"]
 keywords: "nibbles nibbles web · subida de archivos · sudo acceso a nibbleblog, subida de archivos y escalada mediante un script."
+cadena:
+  - seccion: "Un comentario en el código fuente"
+    tecnicas: ["T1594", "T1595.003", "T1110.001"]
+  - seccion: "Subida de archivos"
+    tecnicas: ["T1190", "T1505.003"]
+  - seccion: "El script permitido en sudo"
+    tecnicas: ["T1548.003"]
 ---
 
 ## Un comentario en el código fuente

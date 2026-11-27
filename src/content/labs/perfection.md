@@ -7,6 +7,15 @@ order: 19
 summary: "Inyección en una plantilla Ruby y escalada tras el acceso inicial."
 tags: ["SSTI", "Ruby", "Sudo"]
 keywords: "perfection perfection ssti · ruby · sudo inyección en una plantilla ruby y escalada tras el acceso inicial."
+cadena:
+  - seccion: "Una calculadora hecha en Ruby"
+    tecnicas: ["T1595"]
+  - seccion: "Saltando la validación"
+    tecnicas: ["T1190"]
+  - seccion: "Reverse shell"
+    tecnicas: ["T1059.004"]
+  - seccion: "Acceso a root"
+    tecnicas: ["T1548.003"]
 ---
 
 ## Una calculadora hecha en Ruby

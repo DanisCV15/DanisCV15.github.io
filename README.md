@@ -9,6 +9,7 @@ Hecho con [Astro](https://astro.build). Cada laboratorio y cada proyecto es un a
 ## Qué se genera al compilar
 
 - Una página por laboratorio y proyecto, y una por etiqueta (`etiqueta-suid.html`) con los laboratorios que la usan.
+- Una miniatura de 640×320 por laboratorio (`thumbs/`), recortada de su primera captura.
 - Una imagen de vista previa de 1200×630 por laboratorio y para la portada (`og/`), para cuando se comparte un enlace en LinkedIn. Se dibuja con satori y resvg a partir del título, el resumen y las etiquetas.
 - El índice del buscador con [Pagefind](https://pagefind.app): busca en el texto completo de los laboratorios, no solo en el título.
 - `sitemap-index.xml`, `robots.txt`, la página 404 y datos estructurados (JSON-LD) para buscadores.
@@ -65,7 +66,21 @@ Empezamos con Nmap y vemos los puertos `22` y `80`...
 
 Cada imagen que va sola en un párrafo se convierte en una captura ampliable, con sus dimensiones calculadas al compilar. Si añades un texto entre comillas tras la ruta, sale como pie de foto: `![alt](/captura.webp "Pie de foto")`.
 
-Campos opcionales: `cardTitle` y `cardSummary` (si la tarjeta lleva un texto distinto al de la página), `kind` (por defecto «Laboratorio»), `eyebrow`, `pageTitle`, `description`, `tagLine` y `readLabel`. El esquema completo está en `src/content.config.ts`.
+### Cadena de ataque (MITRE ATT&CK)
+
+Cada laboratorio puede indicar qué técnicas usa en cada sección. Salen como línea de tiempo al principio de la página y alimentan la matriz de la portada:
+
+```yaml
+cadena:
+  - seccion: "Reconocimiento"        # texto exacto de un título ## del writeup
+    tecnicas: ["T1595", "T1595.003"]
+  - seccion: "Acceso inicial"
+    tecnicas: ["T1190", "T1505.003"]
+```
+
+Las técnicas tienen que estar en `src/lib/attack.ts` (ID, nombre oficial y táctica). Si falta una o el título de sección no existe, la compilación falla y dice cuál es.
+
+Campos opcionales: `plataforma` (sale como insignia en la miniatura), `cardTitle` y `cardSummary` (si la tarjeta lleva un texto distinto al de la página), `kind` (por defecto «Laboratorio»), `eyebrow`, `pageTitle`, `description`, `tagLine` y `readLabel`. El esquema completo está en `src/content.config.ts`.
 
 ## Añadir un proyecto
 

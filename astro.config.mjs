@@ -2,6 +2,7 @@ import { defineConfig } from 'astro/config';
 import { unified } from '@astrojs/markdown-remark';
 import sitemap from '@astrojs/sitemap';
 import rehypeFigures from './src/lib/rehype-figures.mjs';
+import shikiTheme from './src/lib/shiki-theme.mjs';
 
 export default defineConfig({
   site: 'https://daniscv15.github.io',
@@ -15,7 +16,7 @@ export default defineConfig({
     }),
   ],
   markdown: {
-    syntaxHighlight: false,
+    shikiConfig: { theme: shikiTheme },
     // smartypants desactivado: el texto se publica tal cual está escrito.
     processor: unified({ smartypants: false, rehypePlugins: [rehypeFigures] }),
   },

@@ -7,6 +7,15 @@ order: 21
 summary: "Enumeración web, acceso inicial y abuso de una capability de lectura."
 tags: ["Web", "Capabilities", "SSH"]
 keywords: "presidential hack4u presidential · hack4u web · capabilities · ssh enumeración web, acceso inicial y abuso de una capability de lectura."
+cadena:
+  - seccion: "Reconocimiento y virtual hosts"
+    tecnicas: ["T1595", "T1595.003"]
+  - seccion: "Un archivo de copia accesible"
+    tecnicas: ["T1552.001"]
+  - seccion: "De phpMyAdmin a una shell"
+    tecnicas: ["T1190", "T1110.002"]
+  - seccion: "El usuario admin y las capabilities"
+    tecnicas: ["T1548", "T1552.004", "T1021.004"]
 ---
 
 ## Reconocimiento y virtual hosts
@@ -51,7 +60,7 @@ Seguimos con las capabilities y encontramos `cap_dac_read_search` en un binario 
 
 Lo utilizamos para crear un archivo comprimido con la clave privada de root, lo extraemos y restringimos los permisos de la clave. Después probamos la conexión SSH local por el puerto `2082`:
 
-```
+```bash
 ssh -i id_rsa root@localhost -p 2082
 ```
 

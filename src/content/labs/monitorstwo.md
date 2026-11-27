@@ -7,6 +7,13 @@ order: 14
 summary: "Acceso a un contenedor, análisis de credenciales y escalada mediante el sistema de archivos."
 tags: ["Docker", "Hashes", "SUID"]
 keywords: "monitorstwo monitorstwo docker · hashes · suid acceso a un contenedor, análisis de credenciales y escalada mediante el sistema de archivos."
+cadena:
+  - seccion: "Acceso a Cacti"
+    tecnicas: ["T1190"]
+  - seccion: "Credenciales dentro del contenedor"
+    tecnicas: ["T1552.001", "T1110.002", "T1021.004"]
+  - seccion: "Del host al sistema de archivos del contenedor"
+    tecnicas: ["T1548.001", "T1611"]
 ---
 
 ## Acceso a Cacti
@@ -31,7 +38,7 @@ Como `marcus`, seguimos enumerando y encontramos una versión antigua de Docker.
 
 Volvemos al contenedor y encontramos `capsh` con SUID. Lo usamos para obtener root dentro de ese entorno:
 
-```
+```bash
 /sbin/capsh --gid=0 --uid=0 --
 ```
 
