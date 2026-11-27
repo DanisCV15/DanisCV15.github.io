@@ -107,7 +107,7 @@ const jsonld = {
             <span class="tags">{data.cardTags}</span>
             <span class="read">{data.readLabel} <span aria-hidden="true">↗</span></span>
           </div>
-          <img src={data.cardImage} alt={data.cardImageAlt} width="1904" height="942" loading="lazy" decoding="async">
+          <img src={`/${data.cardImage}`} alt={data.cardImageAlt} width="960" height="475" loading="lazy" decoding="async">
         </a>
       ))}
     </section>

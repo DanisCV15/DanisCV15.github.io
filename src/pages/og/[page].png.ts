@@ -48,5 +48,5 @@ export const GET: APIRoute = async ({ props }) => {
   ]);
   const svg = await satori(tree as any, { width: 1200, height: 630, fonts });
   const png = new Resvg(svg, { fitTo: { mode: 'width', value: 1200 } }).render().asPng();
-  return new Response(png, { headers: { 'Content-Type': 'image/png' } });
+  return new Response(new Uint8Array(png), { headers: { 'Content-Type': 'image/png' } });
 };

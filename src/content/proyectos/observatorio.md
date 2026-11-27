@@ -12,7 +12,7 @@ pageTitle: "Observatorio · Daniel Escolar"
 description: "Observatorio: panel local que recoge avisos de seguridad públicos y los compara con un inventario de software."
 ogDescription: "Panel local que recoge avisos de seguridad públicos y los compara con un inventario de software."
 image: "shot-observatorio-historico.png"
-cardImage: "shot-observatorio-historico.png"
+cardImage: "shot-observatorio-historico-960.webp"
 cardImageAlt: "Vista del histórico de coincidencias de Observatorio"
 readLabel: "Ver el proyecto"
 order: 1
@@ -52,13 +52,13 @@ Cada ficha dice también hasta dónde llega la comprobación. Si la versión ins
 
 ## Las vistas
 
-![Histórico de coincidencias con indicadores, filtros y agrupación por día de detección](/shot-observatorio-historico.png "El histórico: recuento de casos, filtros por estado y avisos agrupados por el día en que se detectaron.")
+![Histórico de coincidencias con indicadores, filtros y agrupación por día de detección](/shot-observatorio-historico.webp "El histórico: recuento de casos, filtros por estado y avisos agrupados por el día en que se detectaron.")
 
-![Ficha de un aviso pendiente de validar, con el siguiente paso y los datos que faltan](/shot-observatorio-ficha.png "La ficha de un aviso de Fortinet que todavía no está asociado a ningún servidor, con el siguiente paso y lo que falta para confirmarlo.")
+![Ficha de un aviso pendiente de validar, con el siguiente paso y los datos que faltan](/shot-observatorio-ficha.webp "La ficha de un aviso de Fortinet que todavía no está asociado a ningún servidor, con el siguiente paso y lo que falta para confirmarlo.")
 
 ![Cuadrícula de avisos clasificados como posible relación, sin servidores asociados](/shot-observatorio-relaciones.png "Avisos de un mismo día marcados como posible relación.")
 
-![Panel de fuentes con frecuencia de recogida y estado de cada canal](/shot-observatorio-fuentes.png "Las fuentes, con la frecuencia de recogida y el resultado de la última consulta de cada una.")
+![Panel de fuentes con frecuencia de recogida y estado de cada canal](/shot-observatorio-fuentes.webp "Las fuentes, con la frecuencia de recogida y el resultado de la última consulta de cada una.")
 
 ## La seguridad de la propia herramienta
 

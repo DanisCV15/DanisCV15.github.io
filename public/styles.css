@@ -669,3 +669,9 @@ footer {
     transform: none;
   }
 }
+
+/* Título de tarjeta: mismo aspecto sea h2 o h3 */
+.card .card-title {
+  font-size: 25px;
+  margin: 12px 0 16px;
+}

@@ -1,4 +1,14 @@
 ---
+// Fuentes servidas desde la propia web (sin peticiones a Google): solo el subconjunto
+// latino y los pesos que usa el CSS. Las dos más visibles se precargan para evitar saltos.
+import '@fontsource/dm-sans/latin-400.css';
+import '@fontsource/dm-sans/latin-600.css';
+import '@fontsource/dm-sans/latin-700.css';
+import '@fontsource/space-grotesk/latin-400.css';
+import '@fontsource/space-grotesk/latin-700.css';
+import dmSans400 from '@fontsource/dm-sans/files/dm-sans-latin-400-normal.woff2?url';
+import spaceGrotesk700 from '@fontsource/space-grotesk/files/space-grotesk-latin-700-normal.woff2?url';
+
 interface Props {
   title: string;
   description: string;
@@ -35,9 +45,8 @@ const abs = (p: string) => new URL(p, Astro.site).href;
   <title>{title}</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="sitemap" href="/sitemap-index.xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap">
+  <link rel="preload" href={dmSans400} as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href={spaceGrotesk700} as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/styles.css">
   {jsonld && <script type="application/ld+json" set:html={JSON.stringify({ '@context': 'https://schema.org', ...jsonld })} />}
 </head>

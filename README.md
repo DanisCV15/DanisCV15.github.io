@@ -26,6 +26,19 @@ npm run build    # genera la web y el índice del buscador en dist/
 npm run preview  # sirve dist/ para probarla como en producción (el buscador solo funciona tras build)
 ```
 
+## Comprobaciones
+
+```sh
+npm test                  # tipos, compilación, enlaces y pruebas en navegador
+npm run test:lighthouse   # rendimiento, accesibilidad, buenas prácticas y SEO
+```
+
+- `tests/links.mjs` revisa `dist/` sin navegador: enlaces y anclas rotos, recursos que faltan, imágenes sin `alt` o sin dimensiones, un único `h1`, títulos y descripciones duplicados.
+- `tests/browser.mjs` abre un Chrome real (usa `CHROME_PATH` si Chrome no está en la ruta habitual): pasa axe (WCAG 2.2 AA) por todas las páginas y prueba el buscador, el filtro, el visor con teclado, el diseño a 390 px y la 404.
+- `lighthouserc.cjs` exige 90 en rendimiento, 95 en buenas prácticas y 100 en accesibilidad y SEO.
+
+GitHub Actions ejecuta todo esto en cada cambio y en cada pull request. Solo publica si todo pasa.
+
 ## Añadir un laboratorio
 
 1. Copia las capturas en `public/` con el nombre `shot-<laboratorio>-<número>.webp`.

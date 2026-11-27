@@ -33,7 +33,7 @@ const description = `${n} laboratorio${n === 1 ? '' : 's'} de ciberseguridad de 
       <h1>{name}</h1>
       <p class="lead">{n} laboratorio{n === 1 ? '' : 's'} con esta etiqueta.</p>
       <div class="grid">
-        {labs.map((lab) => <LabCard lab={lab} />)}
+        {labs.map((lab) => <LabCard lab={lab} level={2} />)}
       </div>
     </section>
     <section>

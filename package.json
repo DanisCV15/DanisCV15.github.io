@@ -5,7 +5,12 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build && pagefind --site dist",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "check": "astro check",
+    "test:links": "node tests/links.mjs",
+    "test:browser": "node tests/browser.mjs",
+    "test:lighthouse": "lhci autorun --config=./lighthouserc.cjs",
+    "test": "npm run check && npm run build && npm run test:links && npm run test:browser"
   },
   "dependencies": {
     "@astrojs/markdown-remark": "7.3.10",
@@ -18,6 +23,12 @@
     "satori": "0.63.2"
   },
   "devDependencies": {
-    "pagefind": "1.6.0"
+    "@astrojs/check": "0.9.12",
+    "@lhci/cli": "0.16.1",
+    "axe-core": "4.14.1",
+    "cheerio": "1.2.0",
+    "pagefind": "1.6.0",
+    "puppeteer-core": "25.19.0",
+    "typescript": "6.0.3"
   }
 }
