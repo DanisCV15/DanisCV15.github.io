@@ -1,24 +1,24 @@
-name: Publicar en GitHub Pages
+name: Comprobar y publicar
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  build:
+  comprobar:
     runs-on: ubuntu-latest
     env:
       ASTRO_TELEMETRY_DISABLED: 1
+      CHROME_PATH: /usr/bin/google-chrome
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,14 +26,35 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - name: Tipos (astro check)
+        run: npm run check
+      - name: Compilar
+        run: npm run build
+      - name: Enlaces, imágenes y metadatos
+        run: npm run test:links
+      - name: Accesibilidad, buscador, visor y móvil
+        run: npm run test:browser
+      - name: Lighthouse
+        run: npm run test:lighthouse
+      - name: Guardar informes de Lighthouse
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: .lighthouseci/reports
+          if-no-files-found: ignore
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-  deploy:
-    needs: build
+  publicar:
+    if: github.event_name != 'pull_request'
+    needs: comprobar
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
