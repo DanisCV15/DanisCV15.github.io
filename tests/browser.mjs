@@ -75,6 +75,31 @@ try {
   r = await search('');
   check(r.length === total, `sin búsqueda se ven los ${total} laboratorios`);
 
+  // 2b) Matriz ATT&CK: filtrar por técnica y quitar el filtro
+  await page.$eval('#search', (e) => { e.value = ''; e.dispatchEvent(new Event('input')); });
+  const techTotal = await page.$$eval('.tech', (b) => b.length);
+  await page.click('.tech[data-tecnica="T1548.001"]');
+  await wait(200);
+  r = await page.$$eval('.card', (cs) => cs.filter((c) => !c.hidden).map((c) => c.dataset.tecnicas.split(' ')));
+  check(r.length > 0 && r.every((t) => t.includes('T1548.001')), `pulsar T1548.001 en la matriz deja ${r.length} laboratorios, todos con esa técnica (${techTotal} técnicas en la matriz)`);
+  check(await page.$eval('#filtro-tecnica', (e) => !e.hidden), 'aparece el aviso del filtro activo');
+  await page.click('#filtro-tecnica button');
+  await wait(200);
+  r = await page.$$eval('.card', (cs) => cs.filter((c) => !c.hidden).length);
+  check(r === total, `«Quitar filtro» vuelve a mostrar los ${total} laboratorios`);
+
+  // 2c) Cadena de ataque y botón de copiar en un laboratorio
+  await open(page, 'lab-broker.html');
+  const chain = await page.$$eval('.cadena-paso', (as) => as.map((a) => [a.getAttribute('href'), !!document.getElementById(decodeURIComponent(a.hash.slice(1)))]));
+  check(chain.length === 3 && chain.every(([, ok]) => ok), `la cadena de Broker tiene ${chain.length} pasos y todos llevan a su sección`);
+  check(await page.$('.article pre.astro-code span[style]') !== null, 'el código sale resaltado');
+  const ctx = browser.defaultBrowserContext();
+  await ctx.overridePermissions(BASE.slice(0, -1), ['clipboard-read', 'clipboard-write', 'clipboard-sanitized-write']);
+  await page.click('.copy');
+  await wait(150);
+  const copied = await page.evaluate(() => navigator.clipboard.readText()).catch(() => '');
+  check(copied.includes('worker_processes auto;') && (await page.$eval('.copy', (b) => b.textContent)) === 'Copiado', 'el botón «Copiar» copia el bloque de código');
+
   // 3) Visor de capturas con teclado
   await open(page, 'lab-bank.html');
   const figures = await page.$$eval('.article figure > a', (a) => a.length);

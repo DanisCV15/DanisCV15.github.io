@@ -7,6 +7,19 @@ order: 23
 summary: "Laboratorio guiado con aplicación web, API y escalada mediante Go con sudo."
 tags: ["Web", "API", "Go"]
 keywords: "symfono hack4u symfonos 6 · hack4u web · api · go laboratorio guiado con aplicación web, api y escalada mediante go con sudo."
+cadena:
+  - seccion: "Enumerando los servicios"
+    tecnicas: ["T1595", "T1595.003"]
+  - seccion: "XSS en Flyspray"
+    tecnicas: ["T1059.007", "T1552"]
+  - seccion: "Revisando el código del blog"
+    tecnicas: ["T1078"]
+  - seccion: "La API como puente"
+    tecnicas: ["T1190"]
+  - seccion: "Acceso como achilles"
+    tecnicas: ["T1078", "T1098.004"]
+  - seccion: "Go con sudo"
+    tecnicas: ["T1548.003", "T1548.001"]
 ---
 
 ## Enumerando los servicios

@@ -57,3 +57,51 @@
   });
   dialog.addEventListener("close", () => img.removeAttribute("src"));
 })();
+
+// Botón para copiar cada bloque de código.
+(() => {
+  if (!navigator.clipboard) return;
+  for (const pre of document.querySelectorAll(".article pre")) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "copy";
+    button.textContent = "Copiar";
+    button.setAttribute("aria-label", "Copiar el código");
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(pre.querySelector("code")?.innerText ?? pre.innerText);
+        button.textContent = "Copiado";
+      } catch {
+        button.textContent = "No se pudo copiar";
+      }
+      setTimeout(() => (button.textContent = "Copiar"), 1800);
+    });
+    const wrap = document.createElement("div");
+    wrap.className = "code-wrap";
+    pre.before(wrap);
+    wrap.append(pre, button);
+  }
+})();
+
+// Índice lateral: marca la sección que se está leyendo.
+(() => {
+  const links = new Map(
+    [...document.querySelectorAll(".toc a")].map((a) => [decodeURIComponent(a.hash.slice(1)), a])
+  );
+  if (!links.size || !("IntersectionObserver" in window)) return;
+  const headings = [...document.querySelectorAll(".article h2[id]")].filter((h) => links.has(h.id));
+  let current;
+  const observer = new IntersectionObserver(
+    () => {
+      // La sección activa es el último título que ya ha pasado por la parte superior.
+      const passed = headings.filter((h) => h.getBoundingClientRect().top < window.innerHeight * 0.3);
+      const active = passed[passed.length - 1] ?? headings[0];
+      if (active === current) return;
+      links.get(current?.id)?.removeAttribute("aria-current");
+      links.get(active.id)?.setAttribute("aria-current", "true");
+      current = active;
+    },
+    { rootMargin: "0px 0px -60% 0px", threshold: [0, 1] }
+  );
+  headings.forEach((h) => observer.observe(h));
+})();

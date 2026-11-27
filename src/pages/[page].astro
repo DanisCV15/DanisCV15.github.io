@@ -2,6 +2,7 @@
 // Una página por laboratorio (lab-<id>.html) y por proyecto (proyecto-<id>.html).
 import { getCollection, render } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import AttackChain from '../components/AttackChain.astro';
 import { personJsonLd, tagHref } from '../lib/site';
 
 export async function getStaticPaths() {
@@ -17,7 +18,8 @@ export async function getStaticPaths() {
 }
 
 const { entry, kind } = Astro.props;
-const { Content } = await render(entry);
+const { Content, headings } = await render(entry);
+const toc = headings.filter((h) => h.depth === 2);
 const d = entry.data as any;
 const isLab = kind === 'lab';
 const page = Astro.params.page;
@@ -54,7 +56,14 @@ const jsonld = {
   {isLab && !d.tagLine
     ? <p class="tag tag-links">{d.tags.map((t: string, i: number) => <>{i > 0 && ' · '}<a href={tagHref(t)}>{t}</a></>)}</p>
     : <p class="tag">{d.tagLine}</p>}
+  {isLab && <AttackChain cadena={d.cadena} headings={headings} defensive={d.kind !== 'Laboratorio'} />}
+  {toc.length > 2 && (
+    <aside class="toc" aria-labelledby="toc-titulo" data-pagefind-ignore>
+      <p class="eyebrow" id="toc-titulo">En esta página</p>
+      <ol>{toc.map((h) => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+    </aside>
+  )}
   <Content />
   <div class="actions" data-pagefind-ignore><a class="button" href={back.href}>{back.bottom}</a></div>
-  <script slot="scripts" src="/visor.js" defer is:inline></script>
+  <script slot="scripts" src="/articulo.js" defer is:inline></script>
 </Base>

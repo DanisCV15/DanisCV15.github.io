@@ -7,6 +7,13 @@ order: 2
 summary: "Acceso por subida de archivos y escalada mediante permisos delegados entre usuarios."
 tags: ["FTP", "Sudo", "Permisos"]
 keywords: "anonymouspingu anonymouspingu ftp · sudo · permisos acceso por subida de archivos y escalada mediante permisos delegados entre usuarios."
+cadena:
+  - seccion: "Del FTP a la web"
+    tecnicas: ["T1595", "T1190", "T1505.003"]
+  - seccion: "Pasando de un usuario a otro"
+    tecnicas: ["T1548.003"]
+  - seccion: "Acceso a root"
+    tecnicas: ["T1548.003", "T1136.001"]
 ---
 
 ## Del FTP a la web

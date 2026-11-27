@@ -7,6 +7,15 @@ order: 3
 summary: "Enumeración web, subida de archivos y abuso de un binario SUID."
 tags: ["Web", "SUID"]
 keywords: "bank bank web · suid enumeración web, subida de archivos y abuso de un binario suid."
+cadena:
+  - seccion: "Reconocimiento de la web"
+    tecnicas: ["T1595", "T1590.002", "T1595.003"]
+  - seccion: "Una redirección que deja contenido detrás"
+    tecnicas: ["T1190"]
+  - seccion: "Acceso inicial"
+    tecnicas: ["T1505.003", "T1552.001"]
+  - seccion: "Escalada de privilegios"
+    tecnicas: ["T1548.001"]
 ---
 
 ## Reconocimiento de la web

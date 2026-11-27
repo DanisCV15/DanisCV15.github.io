@@ -1,6 +1,11 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { TECHNIQUES } from './lib/attack';
+
+const tecnica = z.string().refine((id) => id in TECHNIQUES, {
+  error: (issue) => `Técnica ATT&CK desconocida: ${String(issue.input)}. Añádela en src/lib/attack.ts`,
+});
 
 const labs = defineCollection({
   loader: glob({ pattern: '*.md', base: './src/content/labs' }),
@@ -20,6 +25,10 @@ const labs = defineCollection({
     description: z.string().optional(),
     readLabel: z.string().default('Leer el recorrido'),
     keywords: z.string().optional(),
+    /** Plataforma del laboratorio (HTB, Hack4u, DockerLabs…), si se quiere mostrar en la tarjeta. */
+    plataforma: z.string().optional(),
+    /** Cadena de ataque: cada sección del writeup con las técnicas ATT&CK que usa. */
+    cadena: z.array(z.object({ seccion: z.string(), tecnicas: z.array(tecnica).min(1) })).default([]),
   }),
 });
 

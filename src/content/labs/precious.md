@@ -7,6 +7,15 @@ order: 20
 summary: "Un generador de PDF abre el camino hasta la ejecución de comandos como root."
 tags: ["PDFKit", "Ruby", "Sudo"]
 keywords: "precious precious pdfkit · ruby · sudo un generador de pdf abre el camino hasta la ejecución de comandos como root."
+cadena:
+  - seccion: "Un generador de PDF"
+    tecnicas: ["T1595"]
+  - seccion: "Inyección de comandos en PDFKit"
+    tecnicas: ["T1190"]
+  - seccion: "Cambiando al usuario henry"
+    tecnicas: ["T1552.001"]
+  - seccion: "Deserialización de YAML"
+    tecnicas: ["T1548.003", "T1574"]
 ---
 
 ## Un generador de PDF
@@ -39,7 +48,7 @@ Revisando los archivos del entorno encontramos una configuración de Bundler en 
 
 El detalle importante es cómo se carga ese YAML: podemos colocar un archivo preparado por nosotros en el directorio de trabajo y hacer que Ruby procese su contenido al ejecutar el script permitido por sudo. Preparamos una prueba de deserialización y ejecutamos:
 
-```
+```bash
 sudo /usr/bin/ruby /opt/update_dependencies.rb
 ```
 

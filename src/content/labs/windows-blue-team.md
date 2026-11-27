@@ -14,6 +14,9 @@ pageTitle: "Laboratorio Windows · Daniel Escolar"
 description: "Laboratorio doméstico de Blue Team en Windows con LimaCharlie, Microsoft Defender y Endpoint Central."
 readLabel: "Leer el caso"
 keywords: "windows blue team soc limacharlie defender eicar edr endpoint central parcheo detección respuesta whoami"
+cadena:
+  - seccion: "01 · Detectar un proceso"
+    tecnicas: ["T1033"]
 ---
 
 ## Qué quería comprobar
@@ -27,7 +30,7 @@ El objetivo del laboratorio era seguir el ciclo completo de una operación de se
 
 ## Cómo se conectaban las piezas
 
-```
+```text
 Windows → ejecución de whoami → sensor y regla → alerta en LimaCharlie
 Windows → archivo EICAR → Microsoft Defender → evento en LimaCharlie
 Consola de LimaCharlie → solicitud de análisis → respuesta del sensor
@@ -56,7 +59,7 @@ El primer análisis de una carpeta devolvió un error porque el comando no acept
 
 La primera respuesta fue un error `400` con `TASK_PARSING_FAILED` y un argumento desconocido. El sensor figuraba conectado, así que centré la comprobación en la forma del comando. El segundo intento devolvió `ERROR: 0` y la ruta objetivo. La respuesta acredita que la solicitud se procesó con éxito. La consola no aportó en esa captura un informe detallado de archivos examinados.
 
-```
+```text
 epp_scan --file_path "<carpeta de prueba>"  → argumento desconocido
 epp_scan "<carpeta de prueba>"              → ERROR: 0
 ```

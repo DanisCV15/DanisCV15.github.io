@@ -7,6 +7,13 @@ order: 22
 summary: "Obtención de acceso WinRM y abuso de permisos sobre servicios."
 tags: ["WinRM", "Server Operators"]
 keywords: "return return winrm · server operators obtención de acceso winrm y abuso de permisos sobre servicios."
+cadena:
+  - seccion: "La configuración de la impresora"
+    tecnicas: ["T1595", "T1552"]
+  - seccion: "Acceso por WinRM"
+    tecnicas: ["T1078", "T1021.006"]
+  - seccion: "Los permisos de Server Operators"
+    tecnicas: ["T1543.003", "T1105"]
 ---
 
 ## La configuración de la impresora
@@ -23,7 +30,7 @@ Reviso el campo de contraseña, pero los asteriscos son texto y no esconden el v
 
 Pruebo las credenciales contra los servicios disponibles. La validación de WinRM funciona, así que entro con Evil-WinRM:
 
-```
+```bash
 evil-winrm -i IP_OBJETIVO -u USUARIO -p CONTRASEÑA
 ```
 

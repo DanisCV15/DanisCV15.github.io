@@ -7,6 +7,15 @@ order: 11
 summary: "Acceso al panel mediante XSS, inyección de comandos y abuso de un script."
 tags: ["XSS", "Inyección", "Sudo"]
 keywords: "headless headless xss · inyección · sudo acceso al panel mediante xss, inyección de comandos y abuso de un script."
+cadena:
+  - seccion: "El formulario de soporte"
+    tecnicas: ["T1595.003"]
+  - seccion: "XSS en una cabecera"
+    tecnicas: ["T1059.007", "T1539"]
+  - seccion: "Inyección al generar informes"
+    tecnicas: ["T1059.004"]
+  - seccion: "Escalada de privilegios"
+    tecnicas: ["T1548.003"]
 ---
 
 ## El formulario de soporte

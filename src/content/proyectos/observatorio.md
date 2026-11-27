@@ -26,7 +26,7 @@ Cuando sale un aviso de seguridad hay que mirar si el producto que menciona est�
 
 ## Cómo funciona
 
-```
+```text
 Fuentes públicas → recogida y deduplicación → contraste ← inventario local
                                                   ↓
 Navegador ⇄ servidor Node.js local ⇄ estado en JSON
